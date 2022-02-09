@@ -8,7 +8,7 @@ from neo4j import GraphDatabase, basic_auth
 
 
 BOLT = 'bolt://localhost:7687'
-DRIVER = GraphDatabase.driver(BOLT, auth=basic_auth("neo4j", "Neo4jPas"), encrypted=False)
+DRIVER = GraphDatabase.driver(BOLT, auth=basic_auth("neo4j", "ne04jcrus03"), encrypted=False)
 
 
 def obtain_pairs_of_ip_addresses(ip_flow_filename, syslog_filename, ip_addresses=None):
@@ -315,13 +315,19 @@ def get_set_of_ips_flow(filename='data/data_ipflow.json'):
 #  '10.7.106.48',
 #  '10.7.106.49'}
 
-def create_ip_flows(ip_flow_filename='data_filtered/data_ipflow_filtered.json'):
+def create_ip_flows(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json', start_timestamp=1553065200000,
+                    end_timestamp=1553092200000):
+    counter = 0
     with open(ip_flow_filename, 'r') as jsonfile:
         for line in jsonfile.readlines():
             data = json.loads(line)
-            create_connections_in_database(data["sourceIPv4Address"], data["destinationIPv4Address"],
-                                           data["biFlowStartMilliseconds"],
-                                           data["biFlowEndMilliseconds"])
+            counter += 1
+            # if data["biFlowStartMilliseconds"] >= start_timestamp and data["biFlowEndMilliseconds"] < end_timestamp:
+            #     counter += 1
+                # create_connections_in_database(data["sourceIPv4Address"], data["destinationIPv4Address"],
+                #                                data["biFlowStartMilliseconds"],
+                #                                data["biFlowEndMilliseconds"])
+    return counter
 
 
 def create_connections_in_database(src_ip, dst_ip, start, end):
