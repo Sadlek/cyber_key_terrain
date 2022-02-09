@@ -109,9 +109,26 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
     # print("test target")
     # print(test_target)
 
+
+    # DT ========================================
     clf = tree.DecisionTreeClassifier()
     clf = clf.fit(training_array, training_target)
-    return clf.predict([test_array[1]]), test_target[1]
+
+    mistakes = 0
+    for i in range(len(test_target)):
+        if clf.predict([test_array[i]]) != test_target[i]:
+            mistakes += 1
+            print("i", i)
+            print("clf.predict(test_array[" + str(i) + "])", clf.predict([test_array[i]]))
+            print("test_target[" + str(i) + "]", test_target[i])
+    # return clf.predict([test_array[1]]), test_target[1]
+
+    # Decision Tree má 37 chýb na nejakých viac ako 43 000 testovacích položkách, čo je
+    # menej ako 1%
+    print("Decision Tree mistakes", mistakes)
+
+    # TODO Naive Bayes classifier
+    # https://www.datacamp.com/community/tutorials/naive-bayes-scikit-learn
 
             # Other possible
             #  "ipClassOfService"
