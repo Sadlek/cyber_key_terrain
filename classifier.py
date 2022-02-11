@@ -76,8 +76,8 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
             # print(data)
 
             array_item = [
-                          # data["biFlowStartMilliseconds"],
-                          # data["biFlowEndMilliseconds"],
+                          data["biFlowStartMilliseconds"],
+                          data["biFlowEndMilliseconds"],
                           le.transform([data["sourceIPv4Address"]]),
                           data["sourceTransportPort"] if "sourceTransportPort" in data else 0,
                           le.transform([data["destinationIPv4Address"]]),
@@ -181,6 +181,14 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
     cm = metrics.confusion_matrix(test_target, predicted_results)
     print(cm)
 
+    # print("SVM")
+    # clf = svm.SVC(kernel="linear")
+    # clf.fit(test_array[0:1000], test_target[0:1000])
+    # predicted_results = clf.predict(training_array)
+    # print("Accuracy:", metrics.accuracy_score(training_target, predicted_results))
+    # cm = metrics.confusion_matrix(training_target, predicted_results)
+    # print(cm)
+
     # deep neural network multilayer perceptron
     sc_X = StandardScaler()
     X_trainscaled = sc_X.fit_transform(training_array[0:1000])
@@ -193,6 +201,18 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
     print("Accuracy:", metrics.accuracy_score(test_target, predicted_results))
     cm = metrics.confusion_matrix(test_target, predicted_results)
     print(cm)
+
+    # sc_X = StandardScaler()
+    # X_trainscaled = sc_X.fit_transform(test_array[0:1000])
+    # X_testscaled = sc_X.transform(training_array)
+    #
+    # clf = MLPClassifier(hidden_layer_sizes=(256, 128, 64, 32),
+    #                     activation="relu", random_state=1)
+    # clf.fit(X_trainscaled, test_target[0:1000])
+    # predicted_results = clf.predict(X_testscaled)
+    # print("Accuracy:", metrics.accuracy_score(training_target, predicted_results))
+    # cm = metrics.confusion_matrix(training_target, predicted_results)
+    # print(cm)
 
             # Other possible
             #  "ipClassOfService"
@@ -414,3 +434,34 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
 #  [    0     8    26     0     0  1344     0     0     0     0     0     3  27610     0   225]
 #  [    0     0     9     0     0    11     0     0     0     0     0     0      0     0     0]
 #  [    0     0     0     0     0   114     0    48     0     0     0     0    102     0   612]]
+
+# TODO vytvorit strukturu siete podľa IP adries
+# dajú sa použiť aj dependencies a communication
+# DNS má suverejne najviac komunikácie
+
+# Na obr. bolo niekoľko clusterov.
+# Jeden cluster v hornej časti tvoril admin1, admin2, spolu s nejakými ďalšími IP adresami, napr. Google DNS a neznámymi adresami z MU, prípadne mimo.
+# Cluster vľavo dole tvoril globálny web spolu so všetkými možnými desktopmi.
+# Cluster vpravo dole tvorilo globálne DNS spolu s lokálnymi DNSkami.
+# Malý cluster vpravo dole, ale trochu vyššie tvoril z nejakého dôvodu globálny desktop1 spolu s lokálnymi mailservermi BTs. Mailservery boli potom slabšími hranami naviazané na DNSka jednotlivých BTs.
+# Podobne to vyzeralo aj pri väčších dátach.
+#
+# Druhá vizualizácia:
+# BT1 Mail server - komunikoval s globálnym desktop1 a s globálnym DNS.
+# BT1 DNS server - komunikoval s globálnym desktop1 a s globálnym DNS.
+# BT1 web server - komunikoval s globálnym desktop1 a s jedným strojom od Microsoftu.
+# BT1 DC server - komunikoval s IP adresami Microsoft korporácie. ASN:8075. Zriedkavo sa našiel niekto ďalší, ako napr. Akamai Technologies pre cloud.
+# BT1 File server - komunikoval s adresami od Microsoftu, Akamai Technologies (cloud), Fastly (content delivery network).
+# BT1 backup server - s Microsoft adresami.
+# BT1 menu server - s adresami mimo MU a adminom3.
+# BT1 DB server - s adresami mimo MU a DNS.
+# BT1 ocs - s global app, global DNS a adresami, kt. nepatrili na cviko.
+# BT1 ups - iba s DNS.
+# BT1 monitoring - s nagios-global, globálnymi desktopmi, globálnym webom, global dns, globálny mail.
+# Globálny DNS komunikoval so všetkými.
+#
+#
+# =====================
+# Komunikácia s Microsoftom sa dá ohaliť na základe ASN 8075 v tokoch - stroje s nainštalovaným Microsoftom.
+# DNS server na základe portu 53. Ďalej protokoly indikujú, aké o aké stroje sa môže jednať: DNS - DNS server, ICMP - mail server, ...
+# Vytvoriť dataset - trénovací a testovací + nainštalovať pythonovskú knižnicu.
