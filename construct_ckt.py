@@ -317,17 +317,17 @@ def get_set_of_ips_flow(filename='data/data_ipflow.json'):
 
 def create_ip_flows(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json', start_timestamp=1553065200000,
                     end_timestamp=1553092200000):
-    counter = 0
+    # counter = 0
     with open(ip_flow_filename, 'r') as jsonfile:
         for line in jsonfile.readlines():
             data = json.loads(line)
-            counter += 1
-            # if data["biFlowStartMilliseconds"] >= start_timestamp and data["biFlowEndMilliseconds"] < end_timestamp:
-            #     counter += 1
-                # create_connections_in_database(data["sourceIPv4Address"], data["destinationIPv4Address"],
-                #                                data["biFlowStartMilliseconds"],
-                #                                data["biFlowEndMilliseconds"])
-    return counter
+            # counter += 1
+            if data["biFlowStartMilliseconds"] >= start_timestamp and data["biFlowEndMilliseconds"] < end_timestamp:
+                # counter += 1
+                create_connections_in_database(data["sourceIPv4Address"], data["destinationIPv4Address"],
+                                               data["biFlowStartMilliseconds"],
+                                               data["biFlowEndMilliseconds"])
+    # return counter
 
 
 def create_connections_in_database(src_ip, dst_ip, start, end):
@@ -338,3 +338,89 @@ def create_connections_in_database(src_ip, dst_ip, start, end):
             "CREATE (a)-[:COMMUNICATES_WITH {start: $start, end: $end}]->(b)",
             **{'first_ip': src_ip, 'second_ip': dst_ip, 'start': start, 'end': end})
     print("created")
+
+
+flow_ips = ['9.66.11.12', '9.66.11.13', '9.66.11.14', '10.1.2.22', '10.1.2.23', '10.1.2.24', '10.1.2.25', '10.1.2.26',
+            '10.1.2.28', '10.1.2.27', '10.1.2.29', '10.1.3.32', '10.1.3.33', '10.1.3.34', '10.1.4.46', '10.1.4.47',
+            '10.1.4.48', '10.1.4.49', '10.1.4.42', '10.1.4.43', '10.1.4.44', '10.1.4.45', '4.122.55.111',
+            '4.122.55.112', '4.122.55.113', '4.122.55.114', '4.122.55.115',
+            #'4.122.55.116',
+            '4.122.55.117',
+            '4.122.55.2', '4.122.55.3', '4.122.55.4', '4.122.55.5', '4.122.55.6', '4.122.55.7', '4.122.55.21',
+            '4.122.55.22', '4.122.55.23', '4.122.55.24', '4.122.55.25', '4.122.55.26', '4.122.55.250']
+
+
+def measure_link_prediction(list_of_ips):
+    function_result = []
+    for first_ip in list_of_ips:
+        for second_ip in list_of_ips:
+            if first_ip == second_ip:
+                continue
+
+            # Adamic Agar
+            with (DRIVER.session()) as session:
+                result = session.run("MATCH (p1:IP_ADDRESS {address: $first_ip}) "
+                                     "MATCH (p2:IP_ADDRESS {address: $second_ip}) "
+                                     "RETURN gds.alpha.linkprediction.adamicAdar(p1, p2, {direction: 'OUTGOING'}) AS score",
+                                     **{'first_ip': first_ip, 'second_ip': second_ip})
+                score = result.data()[0]['score']
+                if score != 0:
+                    # print("first: ", first_ip, ", second: ", second_ip, ", strength: ", score)
+                    function_result.append({"first": first_ip, "second": second_ip, "strength": score})
+    return function_result
+
+
+# TODO je potreba casove znamky
+def prevailing_outcoming_connections(first_ip, second_ip,
+                                     ip_flow_filename='data_filtered/data_ipflow_filtered_start.json'):
+    outcoming = 0
+    incoming = 0
+    with open(ip_flow_filename, 'r') as jsonfile:
+        for line in jsonfile.readlines():
+            data = json.loads(line)
+            # counter += 1
+            if data["sourceIPv4Address"] == first_ip and data["destinationIPv4Address"] == second_ip:
+                outcoming += 1
+            if data["sourceIPv4Address"] == second_ip and data["destinationIPv4Address"] == first_ip:
+                incoming += 1
+    print("Prevailing outcoming connections from ", first_ip, " to ", second_ip, ". Outcoming: ", outcoming,
+          ", incoming: ", incoming)
+    return outcoming > incoming
+
+
+# 1.) Klasifikator klasifikuje typy devices
+# 2.) Podla Page Ranku sa urcia najdolezitejsie zariadenia, tu global-web a global-dns
+# 3.) Podla link prediction sa predpovie, ake zavislosti sa v budcnosti vytvoria - tie su neorientovane,
+# pokial node zvykne odpovedat na prichadzajuce spojenia alebo vysielat spojenia, tak dame smer, inak nechame
+# neorientovanu hranu
+
+def compute_ckt():
+    page_rank_result = []
+    with (DRIVER.session()) as session:
+        page_rank = session.run("CALL gds.pageRank.stream( "
+                             "{ "
+                             "nodeProjection: 'IP_ADDRESS', "
+                             "relationshipProjection: 'COMMUNICATES_WITH' "
+                             "} "
+                             ") "
+                             "YIELD nodeId, score "
+                             "RETURN gds.util.asNode(nodeId).address AS address, score "
+                             "ORDER BY score DESC, address ASC")
+        page_rank_result = page_rank.data()
+        print(page_rank_result)
+
+    ckt = {}
+    for list_item in page_rank_result:
+        # list_item['address']
+        if list_item['score'] >= 2:
+            ckt[list_item['address']] = list_item['score']
+            print(list_item)
+    print(ckt)
+
+    for list_item in measure_link_prediction(flow_ips):
+        first_ip = list_item['first']
+        second_ip = list_item['second']
+        if first_ip in ckt:
+            if prevailing_outcoming_connections(first_ip, second_ip) and list_item['strength'] >= 0.5:
+                ckt[second_ip] = list_item['strength']
+    print(ckt)

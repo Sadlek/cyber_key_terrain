@@ -435,9 +435,21 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
 #  [    0     0     9     0     0    11     0     0     0     0     0     0      0     0     0]
 #  [    0     0     0     0     0   114     0    48     0     0     0     0    102     0   612]]
 
+# 1.) Klasifikator klasifikuje typy devices
+# 2.) Podla Page Ranku sa urcia najdolezitejsie zariadenia, tu global-web a global-dns
+# 3.) Podla link prediction sa predpovie, ake zavislosti sa v budcnosti vytvoria - tie su neorientovane,
+# pokial node zvykne odpovedat na prichadzajuce spojenia alebo vysielat spojenia, tak dame smer, inak nechame
+# neorientovanu hranu
+
+# Do Netboxu dokážem dať devices, device types, IP addreses, IP Ranges, ASN
+# manufacturers, ak by sa použil OS fingerprinting od Martina
+
 # TODO vytvorit strukturu siete podľa IP adries
 # dajú sa použiť aj dependencies a communication
 # DNS má suverejne najviac komunikácie
+# z Neo4j - centrality - importance
+# community detection - groups
+# link prediction - probability that device will be required in the future
 
 # Na obr. bolo niekoľko clusterov.
 # Jeden cluster v hornej časti tvoril admin1, admin2, spolu s nejakými ďalšími IP adresami, napr. Google DNS a neznámymi adresami z MU, prípadne mimo.
