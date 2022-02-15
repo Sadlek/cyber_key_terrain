@@ -8,9 +8,15 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import ConfusionMatrixDisplay
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
 
 
-NAMES = {'9.66.11.12': 'mail server',
+# TODO ostatné IP adresy musia byť takisto zaklasifikované, napr. Google DNS
+NAMES = {
+         # Blue Team 1
+         '9.66.11.12': 'mail server',
          '9.66.11.13': 'DNS server',
          '9.66.11.14': 'web server',
          '10.1.2.22': 'dc',
@@ -31,11 +37,15 @@ NAMES = {'9.66.11.12': 'mail server',
          '10.1.4.43': 'desktop',
          '10.1.4.44': 'desktop',
          '10.1.4.45': 'desktop',
+
+         # Other
          '9.66.1.2': 'cisco_asa',
          '9.66.1.1': 'global_gateway',
          '4.122.55.254': 'flow_capture_interface',
          # '4.122.55.111': 'PC',  # redteam to 111-116
          # red-team7         # 4.122.55.117
+
+         # Global
          '4.122.55.2': 'web server',
          '4.122.55.3': 'DNS server',
          '4.122.55.4': 'mail server',
@@ -43,7 +53,126 @@ NAMES = {'9.66.11.12': 'mail server',
          '4.122.55.6': 'desktop',
          '4.122.55.7': 'app server',
          # test{1-6}  # 4.122.55.21-26
-         '4.122.55.250': 'nagios'
+         '4.122.55.250': 'nagios',
+
+         # Blue Team 2
+         # '9.66.22.12': 'mail server',
+         # '9.66.22.13': 'DNS server',
+         # '9.66.22.14': 'web server',
+         # '10.2.2.22': 'dc',
+         # '10.2.2.23': 'file server',
+         # '10.2.2.24': 'backup server',
+         # '10.2.2.25': 'menu server',
+         # '10.2.2.26': 'DB server',
+         # '10.2.2.28': 'ups',
+         # '10.2.2.27': 'ocs',
+         # '10.2.2.29': 'monitoring',
+         # '10.2.3.32': 'desktop',
+         # '10.2.3.33': 'desktop',
+         # '10.2.4.46': 'admin',
+         # '10.2.4.47': 'admin',
+         # '10.2.4.48': 'admin',
+         # '10.2.4.49': 'admin',
+         # '10.2.4.42': 'desktop',
+         # '10.2.4.43': 'desktop',
+         # '10.2.4.44': 'desktop',
+         # '10.2.4.45': 'desktop',
+
+         # Blue Team 3
+         # '9.66.33.12': 'mail server',
+         # '9.66.33.13': 'DNS server',
+         # '9.66.33.14': 'web server',
+         # '10.3.2.22': 'dc',
+         # '10.3.2.23': 'file server',
+         # '10.3.2.24': 'backup server',
+         # '10.3.2.25': 'menu server',
+         # '10.3.2.26': 'DB server',
+         # '10.3.2.28': 'ups',
+         # '10.3.2.27': 'ocs',
+         # '10.3.2.29': 'monitoring',
+         # '10.3.3.32': 'desktop',
+         # '10.3.3.33': 'desktop',
+         # '10.3.4.46': 'admin',
+         # '10.3.4.47': 'admin',
+         # '10.3.4.48': 'admin',
+         # '10.3.4.49': 'admin',
+         # '10.3.4.42': 'desktop',
+         # '10.3.4.43': 'desktop',
+         # '10.3.4.44': 'desktop',
+         # '10.3.4.45': 'desktop',
+
+         # Blue Team 4
+         # '9.66.44.12': 'mail server',
+         # '9.66.44.13': 'DNS server',
+         # '9.66.44.14': 'web server',
+         # '10.4.2.22': 'dc',
+         # '10.4.2.23': 'file server',
+         # '10.4.2.24': 'backup server',
+         # '10.4.2.25': 'menu server',
+         # '10.4.2.26': 'DB server',
+         # '10.4.2.28': 'ups',
+         # '10.4.2.27': 'ocs',
+         # '10.4.2.29': 'monitoring',
+         # '10.4.3.32': 'desktop',
+         # '10.4.3.33': 'desktop',
+         # '10.4.4.46': 'admin',
+         # '10.4.4.47': 'admin',
+         # '10.4.4.48': 'admin',
+         # '10.4.4.49': 'admin',
+         # '10.4.4.42': 'desktop',
+         # '10.4.4.43': 'desktop',
+         # '10.4.4.44': 'desktop',
+         # '10.4.4.45': 'desktop',
+
+         # Blue Team 5
+         # '9.66.55.12': 'mail server',
+         # '9.66.55.13': 'DNS server',
+         # '9.66.55.14': 'web server',
+         # '10.5.2.22': 'dc',
+         # '10.5.2.23': 'file server',
+         # '10.5.2.24': 'backup server',
+         # '10.5.2.25': 'menu server',
+         # '10.5.2.26': 'DB server',
+         # '10.5.2.28': 'ups',
+         # '10.5.2.27': 'ocs',
+         # '10.5.2.29': 'monitoring',
+         # '10.5.3.32': 'desktop',
+         # '10.5.3.33': 'desktop',
+         # '10.5.4.46': 'admin',
+         # '10.5.4.47': 'admin',
+         # '10.5.4.48': 'admin',
+         # '10.5.4.49': 'admin',
+         # '10.5.4.42': 'desktop',
+         # '10.5.4.43': 'desktop',
+         # '10.5.4.44': 'desktop',
+         # '10.5.4.45': 'desktop',
+
+         # Blue Team 6
+         # '9.66.66.12': 'mail server',
+         # '9.66.66.13': 'DNS server',
+         # '9.66.66.14': 'web server',
+         # '10.6.2.22': 'dc',
+         # '10.6.2.23': 'file server',
+         # '10.6.2.24': 'backup server',
+         # '10.6.2.25': 'menu server',
+         # '10.6.2.26': 'DB server',
+         # '10.6.2.28': 'ups',
+         # '10.6.2.27': 'ocs',
+         # '10.6.2.29': 'monitoring',
+         # '10.6.3.32': 'desktop',
+         # '10.6.3.33': 'desktop',
+         # '10.6.4.46': 'admin',
+         # '10.6.4.47': 'admin',
+         # '10.6.4.48': 'admin',
+         # '10.6.4.49': 'admin',
+         # '10.6.4.42': 'desktop',
+         # '10.6.4.43': 'desktop',
+         # '10.6.4.44': 'desktop',
+         # '10.6.4.45': 'desktop',
+
+         # External IPs
+         # '8.8.8.8': 'DNS server',
+
          }
 
 
@@ -55,18 +184,29 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
     test_array = []
     training_target = []
     test_target = []
+    whole_array = []
+    whole_target = []
     counter = 0
     treshold = 174614
+
+    result_dict = {}
+
     set_of_ip_addresses = set()
+    set_of_app_names = set()
     with open(ip_flow_filename, 'r') as jsonfile:
         for line in jsonfile.readlines():
             data = json.loads(line)
             set_of_ip_addresses.add(data["sourceIPv4Address"])
             set_of_ip_addresses.add(data["destinationIPv4Address"])
+            if "applicationName" in data:
+                set_of_app_names.add(data["applicationName"])
 
     print("encoding")
     le = preprocessing.LabelEncoder()
     le.fit(list(set_of_ip_addresses))
+
+    le2 = preprocessing.LabelEncoder()
+    le2.fit(list(set_of_app_names))
 
     with open(ip_flow_filename, 'r') as jsonfile:
         for line in jsonfile.readlines():
@@ -75,35 +215,49 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
             data = json.loads(line)
             # print(data)
 
+            # TODO pridať ostatné parametre
             array_item = [
                           data["biFlowStartMilliseconds"],
                           data["biFlowEndMilliseconds"],
                           le.transform([data["sourceIPv4Address"]]),
-                          data["sourceTransportPort"] if "sourceTransportPort" in data else 0,
+                          data["sourceTransportPort"] if "sourceTransportPort" in data else -1,
                           le.transform([data["destinationIPv4Address"]]),
-                          data["destinationTransportPort"] if "destinationTransportPort" in data else 0,
+                          data["destinationTransportPort"] if "destinationTransportPort" in data else -1,
                           data["protocolIdentifier"],
                           data["bgpDestinationAsNumber"],
                           data["bgpSourceAsNumber"]]  #,
-                          # data["applicationName"] if "applicationName" in data else None]
+                          # le2.transform([data["applicationName"]]) if "applicationName" in data else -1]
                           # data["exercise_dst_ipv4_segment"]] # vyhodene, pretoze v realnom svete nebude
 
-            if counter <= treshold:
-                training_array.append(array_item)
-
-                # GROUND TRUTH
-                if data["sourceIPv4Address"] in NAMES:
-                    training_target.append(NAMES[data["sourceIPv4Address"]])
-                else:
-                    training_target.append("other")
+            # if counter <= treshold:
+            #     training_array.append(array_item)
+            #
+            #     # GROUND TRUTH
+            #     if data["sourceIPv4Address"] in NAMES:
+            #         training_target.append(NAMES[data["sourceIPv4Address"]])
+            #     else:
+            #         training_target.append("other")
+            # else:
+            #     test_array.append(array_item)
+            #
+            #     # GROUND TRUTH
+            #     if data["sourceIPv4Address"] in NAMES:
+            #         test_target.append(NAMES[data["sourceIPv4Address"]])
+            #     else:
+            #         test_target.append("other")
+            whole_array.append(array_item)
+            if data["sourceIPv4Address"] in NAMES:
+                whole_target.append(NAMES[data["sourceIPv4Address"]])
             else:
-                test_array.append(array_item)
+                whole_target.append("other")
 
-                # GROUND TRUTH
-                if data["sourceIPv4Address"] in NAMES:
-                    test_target.append(NAMES[data["sourceIPv4Address"]])
-                else:
-                    test_target.append("other")
+    for label in ['mail server', 'DNS server', 'web server', 'dc', 'file server', 'backup server',
+                  'menu server', 'DB server', 'ups', 'ocs', 'monitoring', 'desktop', 'admin'
+                  'cisco_asa', 'global_gateway', 'flow_capture_interface']:
+        print("Label: ", label, ", count: ", whole_target.count(label))
+
+    training_array, test_array, training_target, test_target = train_test_split(
+        whole_array, whole_target, test_size=0.2, random_state=42)
 
     # print("training array")
     # print(training_array)
@@ -133,8 +287,11 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
     print("Decision Tree mistakes", mistakes)
     predicted_results = clf.predict(test_array)
     print("Accuracy:", metrics.accuracy_score(test_target, predicted_results))
-    cm = metrics.confusion_matrix(test_target, predicted_results)
+    cm = metrics.confusion_matrix(test_target, predicted_results, labels=clf.classes_)
     print(cm)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=clf.classes_)
+    disp.plot()
+    plt.show()
 
     # Naive Bayes classifier
     # https://www.datacamp.com/community/tutorials/naive-bayes-scikit-learn
@@ -142,8 +299,11 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
     gnb.fit(training_array, training_target)
     predicted_results = gnb.predict(test_array)
     print("Accuracy:", metrics.accuracy_score(test_target, predicted_results))
-    cm = metrics.confusion_matrix(test_target, predicted_results)
+    cm = metrics.confusion_matrix(test_target, predicted_results, labels=gnb.classes_)
     print(cm)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=gnb.classes_)
+    disp.plot()
+    plt.show()
 
     # mistakes = 0
     # # for i in range(len(test_target)):
@@ -160,8 +320,11 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
     logisticRegr.fit(training_array, training_target)
     predicted_results = logisticRegr.predict(test_array)
     print("Accuracy:", metrics.accuracy_score(test_target, predicted_results))
-    cm = metrics.confusion_matrix(test_target, predicted_results)
+    cm = metrics.confusion_matrix(test_target, predicted_results, labels=logisticRegr.classes_)
     print(cm)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=logisticRegr.classes_)
+    disp.plot()
+    plt.show()
 
     # kNN classifier
     print("kNN")
@@ -169,8 +332,11 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
     knn.fit(training_array, training_target)
     predicted_results = knn.predict(test_array)
     print("Accuracy:", metrics.accuracy_score(test_target, predicted_results))
-    cm = metrics.confusion_matrix(test_target, predicted_results)
+    cm = metrics.confusion_matrix(test_target, predicted_results, labels=knn.classes_)
     print(cm)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=clf.classes_)
+    disp.plot()
+    plt.show()
 
     # SVM
     print("SVM")
@@ -178,8 +344,11 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
     clf.fit(training_array[0:1000], training_target[0:1000])
     predicted_results = clf.predict(test_array)
     print("Accuracy:", metrics.accuracy_score(test_target, predicted_results))
-    cm = metrics.confusion_matrix(test_target, predicted_results)
+    cm = metrics.confusion_matrix(test_target, predicted_results, labels=clf.classes_)
     print(cm)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=clf.classes_)
+    disp.plot()
+    plt.show()
 
     # print("SVM")
     # clf = svm.SVC(kernel="linear")
@@ -199,8 +368,11 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
     clf.fit(X_trainscaled, training_target[0:1000])
     predicted_results = clf.predict(X_testscaled)
     print("Accuracy:", metrics.accuracy_score(test_target, predicted_results))
-    cm = metrics.confusion_matrix(test_target, predicted_results)
+    cm = metrics.confusion_matrix(test_target, predicted_results, labels=clf.classes_)
     print(cm)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=clf.classes_)
+    disp.plot()
+    plt.show()
 
     # sc_X = StandardScaler()
     # X_trainscaled = sc_X.fit_transform(test_array[0:1000])

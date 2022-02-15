@@ -5,6 +5,7 @@
 import json
 from pprint import pprint
 from neo4j import GraphDatabase, basic_auth
+from pprint import pprint
 
 
 BOLT = 'bolt://localhost:7687'
@@ -357,20 +358,20 @@ def measure_link_prediction(list_of_ips):
             if first_ip == second_ip:
                 continue
 
-            # Adamic Agar
+            # Adamic-Adar
             with (DRIVER.session()) as session:
                 result = session.run("MATCH (p1:IP_ADDRESS {address: $first_ip}) "
                                      "MATCH (p2:IP_ADDRESS {address: $second_ip}) "
-                                     "RETURN gds.alpha.linkprediction.adamicAdar(p1, p2, {direction: 'OUTGOING'}) AS score",
+                                     "RETURN gds.alpha.linkprediction.adamicAdar(p1, p2) AS score",
                                      **{'first_ip': first_ip, 'second_ip': second_ip})
                 score = result.data()[0]['score']
                 if score != 0:
-                    # print("first: ", first_ip, ", second: ", second_ip, ", strength: ", score)
+                    print("first: ", first_ip, ", second: ", second_ip, ", strength: ", score)
                     function_result.append({"first": first_ip, "second": second_ip, "strength": score})
     return function_result
 
 
-# TODO je potreba casove znamky
+# TODO je potreba casove znamky, pocet hran medzi dvojicou vrcholov
 def prevailing_outcoming_connections(first_ip, second_ip,
                                      ip_flow_filename='data_filtered/data_ipflow_filtered_start.json'):
     outcoming = 0
@@ -379,9 +380,9 @@ def prevailing_outcoming_connections(first_ip, second_ip,
         for line in jsonfile.readlines():
             data = json.loads(line)
             # counter += 1
-            if data["sourceIPv4Address"] == first_ip and data["destinationIPv4Address"] == second_ip:
+            if data["sourceIPv4Address"] == first_ip: # and data["destinationIPv4Address"] == second_ip:
                 outcoming += 1
-            if data["sourceIPv4Address"] == second_ip and data["destinationIPv4Address"] == first_ip:
+            if data["destinationIPv4Address"] == first_ip: # data["sourceIPv4Address"] == second_ip and :
                 incoming += 1
     print("Prevailing outcoming connections from ", first_ip, " to ", second_ip, ". Outcoming: ", outcoming,
           ", incoming: ", incoming)
@@ -407,7 +408,7 @@ def compute_ckt():
                              "RETURN gds.util.asNode(nodeId).address AS address, score "
                              "ORDER BY score DESC, address ASC")
         page_rank_result = page_rank.data()
-        print(page_rank_result)
+        pprint(page_rank_result)
 
     ckt = {}
     for list_item in page_rank_result:
@@ -415,6 +416,14 @@ def compute_ckt():
         if list_item['score'] >= 2:
             ckt[list_item['address']] = list_item['score']
             print(list_item)
+    print(ckt)
+
+    for list_item in measure_link_prediction(flow_ips):
+        first_ip = list_item['first']
+        second_ip = list_item['second']
+        if first_ip in ckt:
+            if prevailing_outcoming_connections(first_ip, second_ip) and list_item['strength'] >= 0.5:
+                ckt[second_ip] = list_item['strength']
     print(ckt)
 
     for list_item in measure_link_prediction(flow_ips):
