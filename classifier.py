@@ -29,19 +29,19 @@ NAMES = {
          '10.1.2.29': 'monitoring',
          '10.1.3.32': 'desktop',
          '10.1.3.33': 'desktop',
-         '10.1.4.46': 'admin',
-         '10.1.4.47': 'admin',
-         '10.1.4.48': 'admin',
-         '10.1.4.49': 'admin',
+         '10.1.4.46': 'desktop',  # 'admin',
+         '10.1.4.47': 'desktop',  # 'admin',
+         '10.1.4.48': 'desktop',  # 'admin',
+         '10.1.4.49': 'desktop',  # 'admin',
          '10.1.4.42': 'desktop',
          '10.1.4.43': 'desktop',
          '10.1.4.44': 'desktop',
          '10.1.4.45': 'desktop',
 
          # Other
-         '9.66.1.2': 'cisco_asa',
-         '9.66.1.1': 'global_gateway',
-         '4.122.55.254': 'flow_capture_interface',
+         '9.66.1.2': 'other',  # 'cisco_asa',
+         '9.66.1.1': 'other',  #'global_gateway',
+         '4.122.55.254': 'other',  #'flow_capture_interface',
          # '4.122.55.111': 'PC',  # redteam to 111-116
          # red-team7         # 4.122.55.117
 
@@ -53,127 +53,136 @@ NAMES = {
          '4.122.55.6': 'desktop',
          '4.122.55.7': 'app server',
          # test{1-6}  # 4.122.55.21-26
-         '4.122.55.250': 'nagios',
+         '4.122.55.250': 'monitoring',  # 'nagios',
 
          # Blue Team 2
-         # '9.66.22.12': 'mail server',
-         # '9.66.22.13': 'DNS server',
-         # '9.66.22.14': 'web server',
-         # '10.2.2.22': 'dc',
-         # '10.2.2.23': 'file server',
-         # '10.2.2.24': 'backup server',
-         # '10.2.2.25': 'menu server',
-         # '10.2.2.26': 'DB server',
-         # '10.2.2.28': 'ups',
-         # '10.2.2.27': 'ocs',
-         # '10.2.2.29': 'monitoring',
-         # '10.2.3.32': 'desktop',
-         # '10.2.3.33': 'desktop',
-         # '10.2.4.46': 'admin',
-         # '10.2.4.47': 'admin',
-         # '10.2.4.48': 'admin',
-         # '10.2.4.49': 'admin',
-         # '10.2.4.42': 'desktop',
-         # '10.2.4.43': 'desktop',
-         # '10.2.4.44': 'desktop',
-         # '10.2.4.45': 'desktop',
+         '9.66.22.12': 'mail server',
+         '9.66.22.13': 'DNS server',
+         '9.66.22.14': 'web server',
+         '10.2.2.22': 'dc',
+         '10.2.2.23': 'file server',
+         '10.2.2.24': 'backup server',
+         '10.2.2.25': 'menu server',
+         '10.2.2.26': 'DB server',
+         '10.2.2.28': 'ups',
+         '10.2.2.27': 'ocs',
+         '10.2.2.29': 'monitoring',
+         '10.2.3.32': 'desktop',
+         '10.2.3.33': 'desktop',
+         '10.2.4.46': 'desktop',  # 'admin',
+         '10.2.4.47': 'desktop',  # 'admin',
+         '10.2.4.48': 'desktop',  # 'admin',
+         '10.2.4.49': 'desktop',  # 'admin',
+         '10.2.4.42': 'desktop',
+         '10.2.4.43': 'desktop',
+         '10.2.4.44': 'desktop',
+         '10.2.4.45': 'desktop',
 
          # Blue Team 3
-         # '9.66.33.12': 'mail server',
-         # '9.66.33.13': 'DNS server',
-         # '9.66.33.14': 'web server',
-         # '10.3.2.22': 'dc',
-         # '10.3.2.23': 'file server',
-         # '10.3.2.24': 'backup server',
-         # '10.3.2.25': 'menu server',
-         # '10.3.2.26': 'DB server',
-         # '10.3.2.28': 'ups',
-         # '10.3.2.27': 'ocs',
-         # '10.3.2.29': 'monitoring',
-         # '10.3.3.32': 'desktop',
-         # '10.3.3.33': 'desktop',
-         # '10.3.4.46': 'admin',
-         # '10.3.4.47': 'admin',
-         # '10.3.4.48': 'admin',
-         # '10.3.4.49': 'admin',
-         # '10.3.4.42': 'desktop',
-         # '10.3.4.43': 'desktop',
-         # '10.3.4.44': 'desktop',
-         # '10.3.4.45': 'desktop',
+         '9.66.33.12': 'mail server',
+         '9.66.33.13': 'DNS server',
+         '9.66.33.14': 'web server',
+         '10.3.2.22': 'dc',
+         '10.3.2.23': 'file server',
+         '10.3.2.24': 'backup server',
+         '10.3.2.25': 'menu server',
+         '10.3.2.26': 'DB server',
+         '10.3.2.28': 'ups',
+         '10.3.2.27': 'ocs',
+         '10.3.2.29': 'monitoring',
+         '10.3.3.32': 'desktop',
+         '10.3.3.33': 'desktop',
+         '10.3.4.46': 'desktop',  # 'admin',
+         '10.3.4.47': 'desktop',  # 'admin',
+         '10.3.4.48': 'desktop',  # 'admin',
+         '10.3.4.49': 'desktop',  # 'admin',
+         '10.3.4.42': 'desktop',
+         '10.3.4.43': 'desktop',
+         '10.3.4.44': 'desktop',
+         '10.3.4.45': 'desktop',
 
          # Blue Team 4
-         # '9.66.44.12': 'mail server',
-         # '9.66.44.13': 'DNS server',
-         # '9.66.44.14': 'web server',
-         # '10.4.2.22': 'dc',
-         # '10.4.2.23': 'file server',
-         # '10.4.2.24': 'backup server',
-         # '10.4.2.25': 'menu server',
-         # '10.4.2.26': 'DB server',
-         # '10.4.2.28': 'ups',
-         # '10.4.2.27': 'ocs',
-         # '10.4.2.29': 'monitoring',
-         # '10.4.3.32': 'desktop',
-         # '10.4.3.33': 'desktop',
-         # '10.4.4.46': 'admin',
-         # '10.4.4.47': 'admin',
-         # '10.4.4.48': 'admin',
-         # '10.4.4.49': 'admin',
-         # '10.4.4.42': 'desktop',
-         # '10.4.4.43': 'desktop',
-         # '10.4.4.44': 'desktop',
-         # '10.4.4.45': 'desktop',
+         '9.66.44.12': 'mail server',
+         '9.66.44.13': 'DNS server',
+         '9.66.44.14': 'web server',
+         '10.4.2.22': 'dc',
+         '10.4.2.23': 'file server',
+         '10.4.2.24': 'backup server',
+         '10.4.2.25': 'menu server',
+         '10.4.2.26': 'DB server',
+         '10.4.2.28': 'ups',
+         '10.4.2.27': 'ocs',
+         '10.4.2.29': 'monitoring',
+         '10.4.3.32': 'desktop',
+         '10.4.3.33': 'desktop',
+         '10.4.4.46': 'desktop',  # 'admin',
+         '10.4.4.47': 'desktop',  # 'admin',
+         '10.4.4.48': 'desktop',  # 'admin',
+         '10.4.4.49': 'desktop',  # 'admin',
+         '10.4.4.42': 'desktop',
+         '10.4.4.43': 'desktop',
+         '10.4.4.44': 'desktop',
+         '10.4.4.45': 'desktop',
 
          # Blue Team 5
-         # '9.66.55.12': 'mail server',
-         # '9.66.55.13': 'DNS server',
-         # '9.66.55.14': 'web server',
-         # '10.5.2.22': 'dc',
-         # '10.5.2.23': 'file server',
-         # '10.5.2.24': 'backup server',
-         # '10.5.2.25': 'menu server',
-         # '10.5.2.26': 'DB server',
-         # '10.5.2.28': 'ups',
-         # '10.5.2.27': 'ocs',
-         # '10.5.2.29': 'monitoring',
-         # '10.5.3.32': 'desktop',
-         # '10.5.3.33': 'desktop',
-         # '10.5.4.46': 'admin',
-         # '10.5.4.47': 'admin',
-         # '10.5.4.48': 'admin',
-         # '10.5.4.49': 'admin',
-         # '10.5.4.42': 'desktop',
-         # '10.5.4.43': 'desktop',
-         # '10.5.4.44': 'desktop',
-         # '10.5.4.45': 'desktop',
+         '9.66.55.12': 'mail server',
+         '9.66.55.13': 'DNS server',
+         '9.66.55.14': 'web server',
+         '10.5.2.22': 'dc',
+         '10.5.2.23': 'file server',
+         '10.5.2.24': 'backup server',
+         '10.5.2.25': 'menu server',
+         '10.5.2.26': 'DB server',
+         '10.5.2.28': 'ups',
+         '10.5.2.27': 'ocs',
+         '10.5.2.29': 'monitoring',
+         '10.5.3.32': 'desktop',
+         '10.5.3.33': 'desktop',
+         '10.5.4.46': 'desktop',  # 'admin',
+         '10.5.4.47': 'desktop',  # 'admin',
+         '10.5.4.48': 'desktop',  # 'admin',
+         '10.5.4.49': 'desktop',  # 'admin',
+         '10.5.4.42': 'desktop',
+         '10.5.4.43': 'desktop',
+         '10.5.4.44': 'desktop',
+         '10.5.4.45': 'desktop',
 
          # Blue Team 6
-         # '9.66.66.12': 'mail server',
-         # '9.66.66.13': 'DNS server',
-         # '9.66.66.14': 'web server',
-         # '10.6.2.22': 'dc',
-         # '10.6.2.23': 'file server',
-         # '10.6.2.24': 'backup server',
-         # '10.6.2.25': 'menu server',
-         # '10.6.2.26': 'DB server',
-         # '10.6.2.28': 'ups',
-         # '10.6.2.27': 'ocs',
-         # '10.6.2.29': 'monitoring',
-         # '10.6.3.32': 'desktop',
-         # '10.6.3.33': 'desktop',
-         # '10.6.4.46': 'admin',
-         # '10.6.4.47': 'admin',
-         # '10.6.4.48': 'admin',
-         # '10.6.4.49': 'admin',
-         # '10.6.4.42': 'desktop',
-         # '10.6.4.43': 'desktop',
-         # '10.6.4.44': 'desktop',
-         # '10.6.4.45': 'desktop',
+         '9.66.66.12': 'mail server',
+         '9.66.66.13': 'DNS server',
+         '9.66.66.14': 'web server',
+         '10.6.2.22': 'dc',
+         '10.6.2.23': 'file server',
+         '10.6.2.24': 'backup server',
+         '10.6.2.25': 'menu server',
+         '10.6.2.26': 'DB server',
+         '10.6.2.28': 'ups',
+         '10.6.2.27': 'ocs',
+         '10.6.2.29': 'monitoring',
+         '10.6.3.32': 'desktop',
+         '10.6.3.33': 'desktop',
+         '10.6.4.46': 'desktop',  # 'admin',
+         '10.6.4.47': 'desktop',  # 'admin',
+         '10.6.4.48': 'desktop',  # 'admin',
+         '10.6.4.49': 'desktop',  # 'admin',
+         '10.6.4.42': 'desktop',
+         '10.6.4.43': 'desktop',
+         '10.6.4.44': 'desktop',
+         '10.6.4.45': 'desktop',
 
          # External IPs
          # '8.8.8.8': 'DNS server',
 
          }
+
+
+LABELS = ['mail server', 'DNS server', 'web server', 'dc', 'file server', 'backup server',
+          'menu server', 'DB server', 'ups', 'ocs', 'monitoring', 'desktop',
+          # 'admin',
+          # 'cisco_asa', 'global_gateway', 'flow_capture_interface',
+          'other', 'app server',
+          # 'nagios'
+          ]
 
 
 def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json'):
@@ -190,9 +199,16 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
     treshold = 174614
 
     result_dict = {}
+    for label in LABELS:
+        result_dict[label] = 0
 
     set_of_ip_addresses = set()
     set_of_app_names = set()
+    set_of_snis = set()
+    set_of_cipher_suites = set()
+    set_of_extension_types = set()
+    set_of_extension_lengths = set()
+    set_of_elliptic_curves = set()
     with open(ip_flow_filename, 'r') as jsonfile:
         for line in jsonfile.readlines():
             data = json.loads(line)
@@ -200,6 +216,21 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
             set_of_ip_addresses.add(data["destinationIPv4Address"])
             if "applicationName" in data:
                 set_of_app_names.add(data["applicationName"])
+            if "extendedFlow" in data:
+                extended_flow = data["extendedFlow"]
+                if "tls" in extended_flow:
+                    tls_string = extended_flow["tls"]
+                    tls_dict = json.loads(tls_string)
+                    set_of_snis.add(tls_dict["sni"])
+                    set_of_cipher_suites.add(tls_dict["cipherSuites"])
+                    set_of_extension_types.add(tls_dict["extensionTypes"])
+                    set_of_extension_lengths.add(tls_dict["extensionLengths"])
+                    set_of_elliptic_curves.add(tls_dict["ellipticCurves"])
+    set_of_snis.add("")
+    set_of_cipher_suites.add("")
+    set_of_extension_types.add("")
+    set_of_extension_lengths.add("")
+    set_of_elliptic_curves.add("")
 
     print("encoding")
     le = preprocessing.LabelEncoder()
@@ -208,25 +239,133 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
     le2 = preprocessing.LabelEncoder()
     le2.fit(list(set_of_app_names))
 
+    le_snis = preprocessing.LabelEncoder()
+    le_snis.fit(list(set_of_snis))
+
+    le_cipher_suites = preprocessing.LabelEncoder()
+    le_cipher_suites.fit(list(set_of_cipher_suites))
+
+    le_extension_types = preprocessing.LabelEncoder()
+    le_extension_types.fit(list(set_of_extension_types))
+
+    le_extension_lengths = preprocessing.LabelEncoder()
+    le_extension_lengths.fit(list(set_of_extension_lengths))
+
+    le_elliptic_curves = preprocessing.LabelEncoder()
+    le_elliptic_curves.fit(list(set_of_elliptic_curves))
+
     with open(ip_flow_filename, 'r') as jsonfile:
         for line in jsonfile.readlines():
             counter += 1
+            if counter > 5000:
+                break
             print("counter", counter)
             data = json.loads(line)
             # print(data)
 
-            # TODO pridať ostatné parametre
+            if data["sourceIPv4Address"] not in NAMES:
+                continue
+
+            # "applicationId": "50331701", "applicationName": "DNS_TCP", "bgpDestinationAsNumber": 3356, "bgpSourceAsNumber": 0,
+            # "biFlowEndMilliseconds": 1552989621213, "biFlowStartMilliseconds": 1552989621205, "destinationIPv4Address":
+            # "4.122.55.3", "destinationTransportPort": 53, "exercise_dst_ipv4_segment": "global",
+            # "extendedFlow": {
+            #     "dns": "{\"questionCount\":1,\"crrType\":1,\"crrTtl\":600,\"qtype\":1,\"flagsCodesResponse\":"
+            #            "34176, \"flagsCodesRequest\":256,\"addtrecCountResponse\":1,\"crrRdata\":"
+            #            "\"0x047a3702\",\"addtrecCountRequest\":0, \"authrecCountRequest\":0,\"crrClass\":1,"
+            #            "\"crrName\":\"0x676f76636572742e6578\",\"answrecCountRequest\":0, \"qname\":"
+            #            "\"0x676f76636572742e6578\",\"crrRdataLen\":4,\"authrecCountResponse\":1,"
+            #            "\"answrecCountResponse\":1, \"id\":35621,\"qclass\":1}"},
+            # "flowEndMilliseconds": 1552989621205, "flowEndMilliseconds_Rev": 1552989621213,
+            # "flowStartMilliseconds": 1552989621205, "flowStartMilliseconds_Rev": 1552989621213, "ingressInterface": 0,
+            # "ipClassOfService": 0, "ipVersion": 4, "mplsLabelStackSection2_Rev": "0x000000", "mplsLabelStackSection3_Rev":
+            # "0x000000", "mplsLabelStackSection4_Rev": "0x000000", "mplsTopLabelStackSection_Rev": "0x000000",
+            # "octetDeltaCount": 56, "octetDeltaCount_Rev": 105, "packetDeltaCount": 1, "packetDeltaCount_Rev": 1,
+            # "protocolIdentifier": 17, "samplingAlgorithm": 0, "samplingInterval": 0, "sourceIPv4Address": "9.66.11.12",
+            # "sourceTransportPort": 39914, "timestamp": 155
+
+            # SYN size, TCP SYN TTL,
+            # TLS SNI, TLS SNI length, TLS Client Version, Client Cipher Suites,
+            # TLS Extension Types, TLS Extension Lengths, TLS Elliptic Curves, TLS EC Point Formats,
+            # HTTP Host,
+            # HTTP UA OS, HTTP UA OS MAJ, HTTP UA OS MIN, HTTP UA OS BLD,
+            # SSH Client Version, SSH Client Application,
+            # SSH Client Encryption, SSH Client MAC, SSH Client Compression
+            # Hodnota TTL musí byť zaokrúhlená na najbližšiu vyššiu mocninu dvojky
+            # R. Lippmann, D. Fried, K. Piwowarski, and W. Streilein, “Passive
+            # operating system identification from tcp/ip packet headers,” in Workshop
+            # on Data Mining for Computer Security, 2003, p. 40
+
+            syn_size = -1
+            syn_ttl = -1
+            tls_sni = ""
+            tls_sni_length = -1
+            tls_client_version = -1
+            tls_cipher_suites = ""
+            tls_extension_types = ""
+            tls_extension_lengths = ""
+            tls_elliptic_curves = ""
+            tls_ec_point_formats = -1
+            if "extendedFlow" in data:
+                extended_flow = data["extendedFlow"]
+                if "tcp" in extended_flow:
+                    tcp_string = extended_flow["tcp"]
+                    tcp_dict = json.loads(tcp_string)
+                    syn_size = tcp_dict['synSize']
+                    syn_ttl = tcp_dict['synTtl']
+                if "tls" in extended_flow:
+                    tls_string = extended_flow["tls"]
+                    tls_dict = json.loads(tls_string)
+                    tls_sni = tls_dict["sni"]
+                    tls_sni_length = tls_dict["sniLength"]
+                    tls_client_version = tls_dict["clientVersion"]
+                    tls_cipher_suites = tls_dict["cipherSuites"]
+                    tls_extension_types = tls_dict["extensionTypes"]
+                    tls_extension_lengths = tls_dict["extensionLengths"]
+                    tls_elliptic_curves = tls_dict["ellipticCurves"]
+                    tls_ec_point_formats = tls_dict["ecPointFormats"]
+                # if "http" in data:
+                #     http_string = extended_flow["http"]
+                #     http_dict = json.loads(http_string)
+                #     http_host = http_dict["host"]
+                #     http_ua_os = http_dict["uaOs"]
+                #     http_ua_os_maj = http_dict["uaOsMaj"]
+                #     http_ua_os_min = http_dict["uaOsMin"]
+                #     http_ua_os_bld = http_dict["uaOsBld"]
+
             array_item = [
                           data["biFlowStartMilliseconds"],
                           data["biFlowEndMilliseconds"],
+                          data["biFlowEndMilliseconds"] - data["biFlowStartMilliseconds"],
                           le.transform([data["sourceIPv4Address"]]),
                           data["sourceTransportPort"] if "sourceTransportPort" in data else -1,
                           le.transform([data["destinationIPv4Address"]]),
                           data["destinationTransportPort"] if "destinationTransportPort" in data else -1,
                           data["protocolIdentifier"],
                           data["bgpDestinationAsNumber"],
-                          data["bgpSourceAsNumber"]]  #,
-                          # le2.transform([data["applicationName"]]) if "applicationName" in data else -1]
+                          data["bgpSourceAsNumber"],  #,
+                          data["applicationId"] if "applicationId" in data else -1,
+                          # le2.transform([data["applicationName"]]) if "applicationName" in data else -1,
+                          data["ipClassOfService"] if "ipClassOfService" in data else -1,
+                          data["octetDeltaCount"] if "octetDeltaCount" in data else -1,
+                          data["octetDeltaCount_Rev"] if "octetDeltaCount_Rev" in data else -1,
+                          data["packetDeltaCount"] if "packetDeltaCount" in data else -1,
+                          data["packetDeltaCount_Rev"] if "packetDeltaCount_Rev" in data else -1,
+                          data["tcpWindowSize"] if "tcpWindowSize" in data else -1,
+                          data["tcpControlBits"] if "tcpControlBits" in data else -1,
+                          data["tcpControlBits_Rev"] if "tcpControlBits_Rev" in data else -1,
+                          data["icmpTypeCodeIPv4"] if "icmpTypeCodeIPv4" in data else -1,
+                          syn_size,
+                          syn_ttl,
+                          le_snis.transform([tls_sni]), # TODO tu sa None value transofrmuje v ramci encoderu, podobne dole
+                          tls_sni_length,
+                          tls_client_version,
+                          le_cipher_suites.transform([tls_cipher_suites]),
+                          le_extension_types.transform([tls_extension_types]),
+                          le_extension_lengths.transform([tls_extension_lengths]),
+                          le_elliptic_curves.transform([tls_elliptic_curves]),
+                          tls_ec_point_formats
+            ]
                           # data["exercise_dst_ipv4_segment"]] # vyhodene, pretoze v realnom svete nebude
 
             # if counter <= treshold:
@@ -245,15 +384,19 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
             #         test_target.append(NAMES[data["sourceIPv4Address"]])
             #     else:
             #         test_target.append("other")
-            whole_array.append(array_item)
             if data["sourceIPv4Address"] in NAMES:
-                whole_target.append(NAMES[data["sourceIPv4Address"]])
+                if result_dict[NAMES[data["sourceIPv4Address"]]] <= 5000:
+                    whole_target.append(NAMES[data["sourceIPv4Address"]])
+                    whole_array.append(array_item)
+                    result_dict[NAMES[data["sourceIPv4Address"]]] += 1
             else:
-                whole_target.append("other")
+                pass
+                # if result_dict['other'] <= 5000:
+                #     whole_target.append("other")
+                #     whole_array.append(array_item)
+                #     result_dict['other'] += 1
 
-    for label in ['mail server', 'DNS server', 'web server', 'dc', 'file server', 'backup server',
-                  'menu server', 'DB server', 'ups', 'ocs', 'monitoring', 'desktop', 'admin'
-                  'cisco_asa', 'global_gateway', 'flow_capture_interface']:
+    for label in LABELS:
         print("Label: ", label, ", count: ", whole_target.count(label))
 
     training_array, test_array, training_target, test_target = train_test_split(
@@ -273,18 +416,19 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
     clf = tree.DecisionTreeClassifier()
     clf = clf.fit(training_array, training_target)
 
-    mistakes = 0
+    # mistakes = 0
     # for i in range(len(test_target)):
     #     if clf.predict([test_array[i]]) != test_target[i]:
     #         mistakes += 1
     #         print("i", i)
+    #         print("test array", test_array[i])
     #         print("clf.predict(test_array[" + str(i) + "])", clf.predict([test_array[i]]))
     #         print("test_target[" + str(i) + "]", test_target[i])
     # return clf.predict([test_array[1]]), test_target[1]
 
     # Decision Tree má 37 chýb na nejakých viac ako 43 000 testovacích položkách, čo je
     # menej ako 1%
-    print("Decision Tree mistakes", mistakes)
+    # print("Decision Tree mistakes", mistakes)
     predicted_results = clf.predict(test_array)
     print("Accuracy:", metrics.accuracy_score(test_target, predicted_results))
     cm = metrics.confusion_matrix(test_target, predicted_results, labels=clf.classes_)
@@ -295,6 +439,7 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
 
     # Naive Bayes classifier
     # https://www.datacamp.com/community/tutorials/naive-bayes-scikit-learn
+    print("Naive Bayes")
     gnb = GaussianNB()
     gnb.fit(training_array, training_target)
     predicted_results = gnb.predict(test_array)
@@ -304,6 +449,16 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=gnb.classes_)
     disp.plot()
     plt.show()
+
+    # mistakes = 0
+    # for i in range(len(test_target)):
+    #     if gnb.predict([test_array[i]]) != test_target[i]:
+    #         mistakes += 1
+    #         print("i", i)
+    #         print("test_array", test_array[i])
+    #         print("clf.predict(test_array[" + str(i) + "])", gnb.predict([test_array[i]]))
+    #         print("test_target[" + str(i) + "]", test_target[i])
+    # print("NB mistakes", mistakes)
 
     # mistakes = 0
     # # for i in range(len(test_target)):
@@ -338,6 +493,16 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
     disp.plot()
     plt.show()
 
+    # mistakes = 0
+    # for i in range(len(test_target)):
+    #     if knn.predict([test_array[i]]) != test_target[i]:
+    #         mistakes += 1
+    #         print("i", i)
+    #         print("test array", test_array[i])
+    #         print("clf.predict(test_array[" + str(i) + "])", knn.predict([test_array[i]]))
+    #         print("test_target[" + str(i) + "]", test_target[i])
+    # print("NB mistakes", mistakes)
+
     # SVM
     print("SVM")
     clf = svm.SVC(kernel="linear")
@@ -359,6 +524,7 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
     # print(cm)
 
     # deep neural network multilayer perceptron
+    print("MLP")
     sc_X = StandardScaler()
     X_trainscaled = sc_X.fit_transform(training_array[0:1000])
     X_testscaled = sc_X.transform(test_array)
@@ -649,3 +815,10 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
 # Komunikácia s Microsoftom sa dá ohaliť na základe ASN 8075 v tokoch - stroje s nainštalovaným Microsoftom.
 # DNS server na základe portu 53. Ďalej protokoly indikujú, aké o aké stroje sa môže jednať: DNS - DNS server, ICMP - mail server, ...
 # Vytvoriť dataset - trénovací a testovací + nainštalovať pythonovskú knižnicu.
+
+# DT - Accuracy: 0.7541013655943544
+# NB - Accuracy: 0.5145266245073778 -> 0.39978003849326366
+# LR - Accuracy: 0.09091742278434607
+# kNN - Accuracy: 0.6143341581889836 -> 0.5847310054073871
+# SVM - Accuracy: 0.09100907341215288
+# MLP - Accuracy: 0.6682247273393823 -> 0.6695078361286775
