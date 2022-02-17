@@ -362,12 +362,24 @@ def measure_link_prediction(list_of_ips):
             with (DRIVER.session()) as session:
                 result = session.run("MATCH (p1:IP_ADDRESS {address: $first_ip}) "
                                      "MATCH (p2:IP_ADDRESS {address: $second_ip}) "
-                                     "RETURN gds.alpha.linkprediction.adamicAdar(p1, p2) AS score",
+                                     "RETURN gds.alpha.linkprediction.adamicAdar(p1, p2) AS score_aa, "
+                                     "gds.alpha.linkprediction.commonNeighbors(p1, p2) AS score_cn, "
+                                     "gds.alpha.linkprediction.preferentialAttachment(p1, p2) AS score_pa, "
+                                     "gds.alpha.linkprediction.resourceAllocation(p1, p2) AS score_ra, "
+                                     "gds.alpha.linkprediction.sameCommunity(p1, p2) AS score_sc, "
+                                     "gds.alpha.linkprediction.totalNeighbors(p1, p2) AS score_tn",
                                      **{'first_ip': first_ip, 'second_ip': second_ip})
-                score = result.data()[0]['score']
-                if score != 0:
-                    print("first: ", first_ip, ", second: ", second_ip, ", strength: ", score)
-                    function_result.append({"first": first_ip, "second": second_ip, "strength": score})
+                # score = result.data()[0]['score']
+                # if score != 0:
+                lp_metrics = result.data()[0]
+                print("first: ", first_ip, ", second: ", second_ip, ", Adamic-Adar: ", lp_metrics['score_aa'],
+                      ", Common Neighbors: ", lp_metrics['score_cn'], ", Pref. Att.: ", lp_metrics['score_pa'],
+                      ", Res. Allocation: ", lp_metrics['score_ra'], ", Same Community: ", lp_metrics['score_sc'],
+                      ", Tot. Neighbors: ", lp_metrics['score_tn'])
+                function_result.append({"first": first_ip, "second": second_ip, "score_aa": lp_metrics['score_aa'],
+                                        "score_cn": lp_metrics['score_cn'], "score_pa": lp_metrics['score_pa'],
+                                        "score_ra": lp_metrics['score_ra'], "score_sc": lp_metrics['score_sc'],
+                                        "score_tn": lp_metrics['score_tn']})
     return function_result
 
 
@@ -413,23 +425,24 @@ def compute_ckt():
     ckt = {}
     for list_item in page_rank_result:
         # list_item['address']
-        if list_item['score'] >= 2:
+        if list_item['score'] >= 4:
             ckt[list_item['address']] = list_item['score']
             print(list_item)
     print(ckt)
 
+    # TODO pribudli ďalšie metriky
     for list_item in measure_link_prediction(flow_ips):
         first_ip = list_item['first']
         second_ip = list_item['second']
         if first_ip in ckt:
-            if prevailing_outcoming_connections(first_ip, second_ip) and list_item['strength'] >= 0.5:
-                ckt[second_ip] = list_item['strength']
+            if prevailing_outcoming_connections(first_ip, second_ip) and list_item['score_aa'] >= 0.5:
+                ckt[second_ip] = list_item['score_aa']
     print(ckt)
 
     for list_item in measure_link_prediction(flow_ips):
         first_ip = list_item['first']
         second_ip = list_item['second']
         if first_ip in ckt:
-            if prevailing_outcoming_connections(first_ip, second_ip) and list_item['strength'] >= 0.5:
-                ckt[second_ip] = list_item['strength']
+            if prevailing_outcoming_connections(first_ip, second_ip) and list_item['score_aa'] >= 0.5:
+                ckt[second_ip] = list_item['score_aa']
     print(ckt)

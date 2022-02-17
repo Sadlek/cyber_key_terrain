@@ -4,7 +4,7 @@ import array
 from pprint import pprint
 from sklearn import preprocessing, metrics, svm
 from sklearn.naive_bayes import GaussianNB
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LinearRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import StandardScaler
@@ -177,10 +177,13 @@ NAMES = {
 
 
 LABELS = ['mail server', 'DNS server', 'web server', 'dc', 'file server', 'backup server',
-          'menu server', 'DB server', 'ups', 'ocs', 'monitoring', 'desktop',
+          'DB server', 'app server',
+          'menu server',
+          'ups', 'ocs',
+          'monitoring', 'desktop',
           # 'admin',
           # 'cisco_asa', 'global_gateway', 'flow_capture_interface',
-          'other', 'app server',
+          'other',
           # 'nagios'
           ]
 
@@ -209,6 +212,7 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
     set_of_extension_types = set()
     set_of_extension_lengths = set()
     set_of_elliptic_curves = set()
+    set_of_hosts = set()
     with open(ip_flow_filename, 'r') as jsonfile:
         for line in jsonfile.readlines():
             data = json.loads(line)
@@ -226,11 +230,16 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
                     set_of_extension_types.add(tls_dict["extensionTypes"])
                     set_of_extension_lengths.add(tls_dict["extensionLengths"])
                     set_of_elliptic_curves.add(tls_dict["ellipticCurves"])
+                if "http" in extended_flow:
+                    http_string = extended_flow["http"]
+                    http_dict = json.loads(http_string)
+                    set_of_hosts.add(http_dict["host"])
     set_of_snis.add("")
     set_of_cipher_suites.add("")
     set_of_extension_types.add("")
     set_of_extension_lengths.add("")
     set_of_elliptic_curves.add("")
+    set_of_hosts.add("")
 
     print("encoding")
     le = preprocessing.LabelEncoder()
@@ -254,10 +263,13 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
     le_elliptic_curves = preprocessing.LabelEncoder()
     le_elliptic_curves.fit(list(set_of_elliptic_curves))
 
+    le_hosts = preprocessing.LabelEncoder()
+    le_hosts.fit(list(set_of_hosts))
+
     with open(ip_flow_filename, 'r') as jsonfile:
         for line in jsonfile.readlines():
             counter += 1
-            if counter > 5000:
+            if counter > 10000:
                 break
             print("counter", counter)
             data = json.loads(line)
@@ -306,6 +318,11 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
             tls_extension_lengths = ""
             tls_elliptic_curves = ""
             tls_ec_point_formats = -1
+            http_host = ""
+            http_ua_os = -1
+            http_ua_os_maj = -1
+            http_ua_os_min = -1
+            http_ua_os_bld = -1
             if "extendedFlow" in data:
                 extended_flow = data["extendedFlow"]
                 if "tcp" in extended_flow:
@@ -316,7 +333,7 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
                 if "tls" in extended_flow:
                     tls_string = extended_flow["tls"]
                     tls_dict = json.loads(tls_string)
-                    tls_sni = tls_dict["sni"]
+                    tls_sni = tls_dict["sni"]  # Server Name Indication
                     tls_sni_length = tls_dict["sniLength"]
                     tls_client_version = tls_dict["clientVersion"]
                     tls_cipher_suites = tls_dict["cipherSuites"]
@@ -324,14 +341,15 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
                     tls_extension_lengths = tls_dict["extensionLengths"]
                     tls_elliptic_curves = tls_dict["ellipticCurves"]
                     tls_ec_point_formats = tls_dict["ecPointFormats"]
-                # if "http" in data:
-                #     http_string = extended_flow["http"]
-                #     http_dict = json.loads(http_string)
-                #     http_host = http_dict["host"]
-                #     http_ua_os = http_dict["uaOs"]
-                #     http_ua_os_maj = http_dict["uaOsMaj"]
-                #     http_ua_os_min = http_dict["uaOsMin"]
-                #     http_ua_os_bld = http_dict["uaOsBld"]
+                # TODO pridat app identification
+                if "http" in data:
+                    http_string = extended_flow["http"]
+                    http_dict = json.loads(http_string)
+                    http_host = http_dict["host"]
+                    http_ua_os = http_dict["uaOs"]
+                    http_ua_os_maj = http_dict["uaOsMaj"]
+                    http_ua_os_min = http_dict["uaOsMin"]
+                    http_ua_os_bld = http_dict["uaOsBld"]
 
             array_item = [
                           data["biFlowStartMilliseconds"],
@@ -364,7 +382,12 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
                           le_extension_types.transform([tls_extension_types]),
                           le_extension_lengths.transform([tls_extension_lengths]),
                           le_elliptic_curves.transform([tls_elliptic_curves]),
-                          tls_ec_point_formats
+                          tls_ec_point_formats,
+                          le_hosts.transform([http_host]),
+                          http_ua_os,
+                          http_ua_os_maj,
+                          http_ua_os_min,
+                          http_ua_os_bld
             ]
                           # data["exercise_dst_ipv4_segment"]] # vyhodene, pretoze v realnom svete nebude
 
@@ -384,8 +407,11 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
             #         test_target.append(NAMES[data["sourceIPv4Address"]])
             #     else:
             #         test_target.append("other")
+
             if data["sourceIPv4Address"] in NAMES:
                 if result_dict[NAMES[data["sourceIPv4Address"]]] <= 5000:
+                    if result_dict[NAMES[data["sourceIPv4Address"]]] >= 200:
+                        continue
                     whole_target.append(NAMES[data["sourceIPv4Address"]])
                     whole_array.append(array_item)
                     result_dict[NAMES[data["sourceIPv4Address"]]] += 1
@@ -401,6 +427,8 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
 
     training_array, test_array, training_target, test_target = train_test_split(
         whole_array, whole_target, test_size=0.2, random_state=42)
+
+    # return training_array, test_array, training_target, test_target
 
     # print("training array")
     # print(training_array)
@@ -469,17 +497,17 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
     # #         print("test_target[" + str(i) + "]", test_target[i])
     # print("Naive Bayes mistakes", mistakes)
 
-    # Logistic regression
-    print("Logistic Regression")
-    logisticRegr = LogisticRegression()
-    logisticRegr.fit(training_array, training_target)
-    predicted_results = logisticRegr.predict(test_array)
-    print("Accuracy:", metrics.accuracy_score(test_target, predicted_results))
-    cm = metrics.confusion_matrix(test_target, predicted_results, labels=logisticRegr.classes_)
-    print(cm)
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=logisticRegr.classes_)
-    disp.plot()
-    plt.show()
+    # Logistic regression Linear !!!!!
+    # print("Logistic Regression")
+    # regr = LinearRegression()
+    # regr.fit(training_array, training_target)
+    # predicted_results = regr.predict(test_array)
+    # print("Accuracy:", metrics.accuracy_score(test_target, predicted_results))
+    # cm = metrics.confusion_matrix(test_target, predicted_results) # , labels=regr.)
+    # print(cm)
+    # disp = ConfusionMatrixDisplay(confusion_matrix=cm) #, display_labels=regr.classes_)
+    # disp.plot()
+    # plt.show()
 
     # kNN classifier
     print("kNN")
@@ -505,7 +533,8 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
 
     # SVM
     print("SVM")
-    clf = svm.SVC(kernel="linear")
+    clf = svm.LinearSVC(C=100)
+    # clf = svm.SVC(kernel="linear", C=0.8, gamma=0.1)
     clf.fit(training_array[0:1000], training_target[0:1000])
     predicted_results = clf.predict(test_array)
     print("Accuracy:", metrics.accuracy_score(test_target, predicted_results))
@@ -816,9 +845,8 @@ def prepare_sets(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json
 # DNS server na základe portu 53. Ďalej protokoly indikujú, aké o aké stroje sa môže jednať: DNS - DNS server, ICMP - mail server, ...
 # Vytvoriť dataset - trénovací a testovací + nainštalovať pythonovskú knižnicu.
 
-# DT - Accuracy: 0.7541013655943544
-# NB - Accuracy: 0.5145266245073778 -> 0.39978003849326366
-# LR - Accuracy: 0.09091742278434607
-# kNN - Accuracy: 0.6143341581889836 -> 0.5847310054073871
-# SVM - Accuracy: 0.09100907341215288
-# MLP - Accuracy: 0.6682247273393823 -> 0.6695078361286775
+# DT - Accuracy: 0.7541013655943544 -> 0.9928400954653938
+# NB - Accuracy: 0.5145266245073778 -> 0.39978003849326366 -> 0.3585918854415274
+# kNN - Accuracy: 0.6143341581889836 -> 0.5847310054073871 -> 0.8013126491646778
+# SVM - Accuracy: 0.09100907341215288 -> 0.610381861575179
+# MLP - Accuracy: 0.6682247273393823 -> 0.6695078361286775 -> 0.8711217183770883
