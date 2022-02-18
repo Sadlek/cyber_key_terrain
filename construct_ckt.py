@@ -435,6 +435,8 @@ def compute_ckt():
         first_ip = list_item['first']
         second_ip = list_item['second']
         if first_ip in ckt:
+            # TODO opravit, lebo toto nebude fungovat, napr. lokalny DNS5 ma takmer o 8000 viacej outgoing ako
+            # incoming connections a global DNS ma zasa takmer o 27 000 viacej incoming connections
             if prevailing_outcoming_connections(first_ip, second_ip) and list_item['score_aa'] >= 0.5:
                 ckt[second_ip] = list_item['score_aa']
     print(ckt)
@@ -446,3 +448,12 @@ def compute_ckt():
             if prevailing_outcoming_connections(first_ip, second_ip) and list_item['score_aa'] >= 0.5:
                 ckt[second_ip] = list_item['score_aa']
     print(ckt)
+
+
+# TODO pozorvanie
+# PageRank určí poradie IP adries podľa vzájomných odkazov, na prvých miestach globálny DNS, global web, lokálny DNS4,
+# lokálny DNS2, potom sa to začína miešať s devices, kt. by sme možno nechceli, ale stále tam je veľa zariadení z CKT
+# napr. admin, monitoring, lokálny web4, Google DNS, ...
+
+# TODO pridat time series link prediction, pretoze stratime casovu informaciu
+#  https://ieeexplore.ieee.org/document/6252471
