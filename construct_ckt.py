@@ -380,6 +380,7 @@ def measure_link_prediction(list_of_ips):
                                         "score_cn": lp_metrics['score_cn'], "score_pa": lp_metrics['score_pa'],
                                         "score_ra": lp_metrics['score_ra'], "score_sc": lp_metrics['score_sc'],
                                         "score_tn": lp_metrics['score_tn']})
+        print()
     return function_result
 
 
@@ -457,3 +458,64 @@ def compute_ckt():
 
 # TODO pridat time series link prediction, pretoze stratime casovu informaciu
 #  https://ieeexplore.ieee.org/document/6252471
+
+# pagerank - influence or importance of nodes in a directed graph
+# articlerank - ako pagerank, ale measures transitive influence or connectivity of nodes
+# nepodarilo sa spočítať kvôli halde
+# betweenness centrality  - amount of influence a node has over the flow of information in a graph
+# betweenness centrality s absolútnou hodnotou centrality, dáva ešte lepší prehľad zoradených top n zariadení
+# degree centrality - find popularity of individual nodes, extract fraudsters from legitimate users
+# degree centrality nedáva až také dobré výsledky ako betweenness pri zoradení DESC
+# closeness centrality dáva nanič výsledky
+# eigenvector centrality - nepodarilo sa spočítať kvôli halde
+
+# Backupy jednotlivých Neo4j queries
+# CALL gds.alpha.articleRank.stream({nodeProjection: 'IP_ADDRESS', relationshipProjection: 'COMMUNICATES_WITH',
+# maxIterations: 20, dampingFactor: 0.85}) YIELD nodeId, score RETURN gds.util.asNode(nodeId).address AS
+# address, score ORDER BY score DESC, address ASC
+#
+# CALL gds.alpha.betweenness.stream({nodeProjection: 'IP_ADDRESS', relationshipProjection: {COMMUNICATES_WITH:
+# {type: 'COMMUNICATES_WITH', orientation: 'NATURAL'}}}) YIELD nodeId, centrality
+# RETURN gds.util.asNode(nodeId).address AS address, abs(centrality) ORDER BY abs(centrality) DESC, address ASC
+#
+# CALL gds.alpha.degree.stream({nodeProjection: 'IP_ADDRESS', relationshipProjection: {COMMUNICATES_WITH:
+# {type: 'COMMUNICATES_WITH', orientation: 'NATURAL'}}}) YIELD nodeId, score
+# RETURN gds.util.asNode(nodeId).address AS address, score ORDER BY score DESC, address ASC
+
+# Link prediction metrics
+# Adamic Adar - closeness of nodes based on their shared neighbors
+# Common Neighbors -  two strangers who have a friend in common are more likely to be introduced
+# Preferential Attachment - closeness of nodes, based on their shared neighbors
+# Resource Allocation - closeness of nodes based on their shared neighbors
+# Same Community - 0 indicates different community, 1 indicates that two nodes are in the same community
+# Total Neighbors - closeness of nodes, based on the number of unique neighbors that they have.
+#                   It is based on the idea that the more connected a node is, the more likely
+#                   it is to receive new links. E.g., DNS?
+#
+# Vzorce pre LP metriky
+# Adamic Adar a Resource Allocation majú podobný vzorec, iba Adamic Adar má logaritmus. Obidva vyjadrujú, že
+# keď majú x, y spoločných susedov, tak ich blízkosť je tým vyššia, čím menší počet susedov majú ich susedia okrem
+# ich samotných. x, y sú unikátnejšie k sebe "zviazané".
+# Common Neighbors - čím viac spoločných susedov majú, tým sú si x,y bližšími vrcholmi.
+# Preferential Attachment - čím viac susedov majú v súčine x aj y, tým sú si bližšími vrcholmi.
+# Total Neighbors - čím viac unikátnych susedov majú v súčte x aj y, tým je pravdepodobnejšie ich spojenie.
+
+# mission critical devices majú spravidla veľa source IPs, kt. na ne komunikujú zo siete
+
+# MATCH (ip1:IP_ADDRESS)-[r:COMMUNICATES_WITH]->(ip2:IP_ADDRESS) WHERE r.end <= 1553008187739  AND r.start >= 1552994894805 AND ip1.address STARTS WITH '10.' OR ip1.address STARTS WITH '4.122.' OR ip1.address STARTS WITH '9.66.' RETURN DISTINCT ip1.address, ip2.address
+
+# Pri vyfiltrovani pomocou
+# CALL gds.alpha.betweenness.stream({nodeQuery: 'MATCH (n) RETURN id(n) AS id', relationshipQuery:
+# "MATCH (ip1:IP_ADDRESS)-[r:COMMUNICATES_WITH]->(ip2:IP_ADDRESS) WHERE r.end <= 1553008187739  AND r.start >=
+# 1552994894805 AND ip1.address STARTS WITH '10.' OR ip1.address STARTS WITH '4.122.' OR ip1.address STARTS WITH
+# '9.66.' RETURN DISTINCT id(ip1) AS source, id(ip2) AS target"}) YIELD nodeId, centrality RETURN
+# gds.util.asNode(nodeId).address AS address, abs(centrality) ORDER BY abs(centrality) DESC, address ASC
+# majú popredné pozície prakticky iba mission-critical devices. Všetko ostatné, napr. desktop, má nulovú centralitu.
+
+# Pri aplikovani PageRanku na ten isty subgraph dostanem horsi zoznam, kt. obsahuje na poprednych poziciach monitoring,
+# a obcas aj nejakeho admina alebo desktop este pred local DNS alebo web
+
+# RQ1: betweenness centrality - zmerat, ake uspesne je pri urcovani toho, co by mohlo byt critical?
+# RQ2: casove serie + link prediction - na urcenie zavislosti
+# RQ3: urcenie typu sluzby cisto na zaklade hodnot tychto metrik - napr. priemerna hodnota Adamic-Adar indexu
+# vzhladom k vsetkym dalsim moznym susedom
