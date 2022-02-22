@@ -6,6 +6,7 @@ import json
 from pprint import pprint
 from neo4j import GraphDatabase, basic_auth
 from pprint import pprint
+from math import sqrt
 
 
 BOLT = 'bolt://localhost:7687'
@@ -372,14 +373,15 @@ def measure_link_prediction(list_of_ips):
                 # score = result.data()[0]['score']
                 # if score != 0:
                 lp_metrics = result.data()[0]
-                print("first: ", first_ip, ", second: ", second_ip, ", Adamic-Adar: ", lp_metrics['score_aa'],
-                      ", Common Neighbors: ", lp_metrics['score_cn'], ", Pref. Att.: ", lp_metrics['score_pa'],
-                      ", Res. Allocation: ", lp_metrics['score_ra'], ", Same Community: ", lp_metrics['score_sc'],
-                      ", Tot. Neighbors: ", lp_metrics['score_tn'])
-                function_result.append({"first": first_ip, "second": second_ip, "score_aa": lp_metrics['score_aa'],
-                                        "score_cn": lp_metrics['score_cn'], "score_pa": lp_metrics['score_pa'],
-                                        "score_ra": lp_metrics['score_ra'], "score_sc": lp_metrics['score_sc'],
-                                        "score_tn": lp_metrics['score_tn']})
+                if lp_metrics['score_aa'] != 0:
+                    print("first: ", first_ip, ", second: ", second_ip, ", Adamic-Adar: ", lp_metrics['score_aa'],
+                          ", Common Neighbors: ", lp_metrics['score_cn'], ", Pref. Att.: ", lp_metrics['score_pa'],
+                          ", Res. Allocation: ", lp_metrics['score_ra'], ", Same Community: ", lp_metrics['score_sc'],
+                          ", Tot. Neighbors: ", lp_metrics['score_tn'])
+                    function_result.append({"first": first_ip, "second": second_ip, "score_aa": lp_metrics['score_aa'],
+                                            "score_cn": lp_metrics['score_cn'], "score_pa": lp_metrics['score_pa'],
+                                            "score_ra": lp_metrics['score_ra'], "score_sc": lp_metrics['score_sc'],
+                                            "score_tn": lp_metrics['score_tn']})
         print()
     return function_result
 
@@ -404,7 +406,7 @@ def prevailing_outcoming_connections(first_ip, second_ip,
 
 # 1.) Klasifikator klasifikuje typy devices
 # 2.) Podla Page Ranku sa urcia najdolezitejsie zariadenia, tu global-web a global-dns
-# 3.) Podla link prediction sa predpovie, ake zavislosti sa v budcnosti vytvoria - tie su neorientovane,
+# 3.) Podla link prediction sa predpovie, ake zavislosti sa v buducnosti vytvoria - tie su neorientovane,
 # pokial node zvykne odpovedat na prichadzajuce spojenia alebo vysielat spojenia, tak dame smer, inak nechame
 # neorientovanu hranu
 
@@ -426,7 +428,7 @@ def compute_ckt():
     ckt = {}
     for list_item in page_rank_result:
         # list_item['address']
-        if list_item['score'] >= 4:
+        if list_item['score'] >= 8.5: # write elbow here
             ckt[list_item['address']] = list_item['score']
             print(list_item)
     print(ckt)
@@ -438,17 +440,19 @@ def compute_ckt():
         if first_ip in ckt:
             # TODO opravit, lebo toto nebude fungovat, napr. lokalny DNS5 ma takmer o 8000 viacej outgoing ako
             # incoming connections a global DNS ma zasa takmer o 27 000 viacej incoming connections
-            if prevailing_outcoming_connections(first_ip, second_ip) and list_item['score_aa'] >= 0.5:
+            if prevailing_outcoming_connections(first_ip, second_ip) and \
+                    list_item['score_aa']*ckt[list_item['address']] >= 8.5:
+                    # list_item['score_aa'] >= 0.2:
                 ckt[second_ip] = list_item['score_aa']
     print(ckt)
 
-    for list_item in measure_link_prediction(flow_ips):
-        first_ip = list_item['first']
-        second_ip = list_item['second']
-        if first_ip in ckt:
-            if prevailing_outcoming_connections(first_ip, second_ip) and list_item['score_aa'] >= 0.5:
-                ckt[second_ip] = list_item['score_aa']
-    print(ckt)
+    # for list_item in measure_link_prediction(flow_ips):
+    #     first_ip = list_item['first']
+    #     second_ip = list_item['second']
+    #     if first_ip in ckt:
+    #         if list_item['score_aa'] >= 1 and prevailing_outcoming_connections(first_ip, second_ip):
+    #             ckt[second_ip] = list_item['score_aa']
+    # print(ckt)
 
 
 # TODO pozorvanie
@@ -502,7 +506,10 @@ def compute_ckt():
 
 # mission critical devices majú spravidla veľa source IPs, kt. na ne komunikujú zo siete
 
-# MATCH (ip1:IP_ADDRESS)-[r:COMMUNICATES_WITH]->(ip2:IP_ADDRESS) WHERE r.end <= 1553008187739  AND r.start >= 1552994894805 AND ip1.address STARTS WITH '10.' OR ip1.address STARTS WITH '4.122.' OR ip1.address STARTS WITH '9.66.' RETURN DISTINCT ip1.address, ip2.address
+# MATCH (ip1:IP_ADDRESS)-[r:COMMUNICATES_WITH]->(ip2:IP_ADDRESS) WHERE r.end <= 1553008187739
+# AND r.start >= 1552994894805 AND (ip1.address STARTS WITH '10.' OR ip1.address STARTS WITH '4.122.'
+# OR ip1.address STARTS WITH '9.66.') AND (ip2.address STARTS WITH '10.' OR ip2.address STARTS WITH '4.122.'
+# OR ip2.address STARTS WITH '9.66.') RETURN DISTINCT ip1.address, ip2.address
 
 # Pri vyfiltrovani pomocou
 # CALL gds.alpha.betweenness.stream({nodeQuery: 'MATCH (n) RETURN id(n) AS id', relationshipQuery:
@@ -519,3 +526,105 @@ def compute_ckt():
 # RQ2: casove serie + link prediction - na urcenie zavislosti
 # RQ3: urcenie typu sluzby cisto na zaklade hodnot tychto metrik - napr. priemerna hodnota Adamic-Adar indexu
 # vzhladom k vsetkym dalsim moznym susedom
+
+# Pri vyfiltrovaní dát, kt. majú src a dst IP začínajúcu '4.122.', '9.' a '10.' dáva PageRank veľmi dobré výsledky v
+# porovnaní s betweenness centrality, lebo tá uprednostňuje desktopy a adminov pred lokálnymi DNS serverami.
+
+def find_elbow(x_values, y_values):
+    # Vykreslime si hodnoty PageRanku pre jednotlive IP adresy do scree plotu, kde sa hodnoty
+    # PageRanku zoradia zlava doprava. Potom elbow rule hlada zlom, kde sa uz vyraznejsie nezlepsi
+    # situacia, ked pridame do vysledneho setu dalsiu IP adresu. Napr. pri clusteringu sa tak hlada
+    # K pre K means ako optimalny pocet clusterov, kde sa vysvetli najviac variancie. Tu sa to
+    # interpretuje ako zlom, kedy uz dalsia IP adresa nepatri podla nameranych dat medzi kriticke
+    # zariadenia.
+    # Mozno by bolo lepsie zobrat 100/pocet_vrcholov ako treshold
+
+    # find_elbow(list(range(0, 42)),
+    #            [20.62647748924792, 12.53251598738134, 5.84445391166955, 3.5142225843854247, 2.2400486109778286,
+    #             1.9600733295083048, 1.912588862422854, 1.7032109023537487, 1.7032109023537487,
+    #             1.7032109023537487, 1.7032109023537487, 1.7032109023537487, 1.7032109023537487, 1.6993320974055681,
+    #             1.588838569028303, 1.5663351750932633, 1.542579449899495, 1.266422344464809,
+    #             1.1819780226098373, 0.9978374485624958, 0.9961600645910947, 0.9670543998479844, 0.9670543998479844,
+    #             0.9089744182303549, 0.8859731738222762, 0.8792908591218292, 0.7950929156504571,
+    #             0.7393529727589341, 0.6932658981066198, 0.6932658981066198, 0.6932658981066198, 0.6698968957760372,
+    #             0.6698968957760372, 0.6698968957760372, 0.6698968957760372, 0.6698968957760372,
+    #             0.6698968957760372, 0.6698968957760372, 0.6698968957760372, 0.6698968957760372, 0.6698968957760372,
+    #             0.6698968957760372, 0.6698968957760372])
+
+    # TODO toto by fungovalo, keby x bolo numerického typu
+    # x_values = range(0, n)
+    # prevzate z https://stackoverflow.com/questions/2018178/finding-the-best-trade-off-point-on-a-curve
+    # max_x_x = max(x_values)
+    # print("max_x_x", max_x_x)
+    # max_x_y = y_values[max_x_x-1]
+    # print("max_x_y", max_x_y)
+    # max_y_y = max(y_values)
+    # print("max_y_y", max_y_y)
+    # max_y_x = y_values.index(max_y_y)
+    # print("max_y_x", max_y_x)
+    # highest_value_x = 0
+    # highest_value_y = 0
+    # highest_distance = 0
+    #
+    # for x_current in x_values:
+    #     if x_current != max_x_x and x_current != max_y_x:
+    #         # line: (max_x_x, max_x_y), (max_y_x, max_y_y)
+    #         # point: (x_current, y_values[x_current])
+    #         distance = abs((max_y_x-max_x_x)*(max_x_y-y_values[x_current]) - (max_x_x-x_current)*(max_y_y-max_x_y)) \
+    #                    / sqrt((max_y_x-max_x_x)*(max_y_x-max_x_x) + (max_y_y-max_x_y)*(max_y_y-max_x_y))
+    #         # distance = abs((x_current - max_x_x) * (max_x_y - max_y_y) - (max_x_x - max_y_x) * (y_values[x_current] - max_x_y)) \
+    #         #            / sqrt((x_current - max_x_x)*(x_current - max_x_x) +
+    #         #                   (y_values[x_current] - max_x_y)*(y_values[x_current] - max_x_y))
+    #         if distance > highest_distance:
+    #             highest_distance = distance
+    #             highest_value_x = x_current
+    #             highest_value_y = y_values[x_current]
+    # print(highest_value_x, highest_value_y)
+
+    # https://stackoverflow.com/questions/4471993/compute-the-elbow-for-a-curve-automatically-and-mathematically
+    # vzorec pre second derivative bol odvodený z Taylorovych rad
+    # secondDerivative[i] = f(x[i + 1]) + f(x[i - 1]) - 2 * f(x[i])
+    # Tento vzorec je lepsi, lebo ked to pustime do nekonecna, tak tam existuju hocijake "mensie elbows"
+    # https://en.wikipedia.org/wiki/Knee_of_a_curve - optimization
+    min_x = x_values[0]
+    max_x = x_values[len(x_values)-1]
+    highest_derivative_x = 0
+    highest_derivative_y = 0
+    highest_derivative_value = 0
+
+    for x_current in x_values:
+        if x_current != min_x and x_current != max_x:
+            derivative = y_values[x_current+1] + y_values[x_current-1] - 2 * y_values[x_current]
+            if derivative > highest_derivative_value:
+                highest_derivative_value = derivative
+                highest_derivative_x = x_current
+                highest_derivative_y = y_values[x_current]
+    return highest_derivative_x, highest_derivative_y, highest_derivative_value
+
+
+# Pozorovanie - predstavme si, ze web server 9.66.11.14. je mission-critical. Potom jeho zavislosti sa daju na zaklade
+# link prediction metrics odvodit?
+# Dalej - vezmi hosta - k nemu adamic adar metrics pre vsetkych a nejako urci treshold / elbow.
+
+
+def evaluate_link_prediction_metrics(list_of_ips):
+    for first_ip in list_of_ips:
+        # IPs that can be connected with the first IP contain in the dictionary value of Adamic Adar index
+        adamic_adar_values = {}
+        for second_ip in list_of_ips:
+            with (DRIVER.session()) as session:
+                result = session.run("MATCH (p1:IP_ADDRESS {address: $first_ip}) "
+                                     "MATCH (p2:IP_ADDRESS {address: $second_ip}) "
+                                     "RETURN gds.alpha.linkprediction.adamicAdar(p1, p2) AS score_aa",
+                                     **{'first_ip': first_ip, 'second_ip': second_ip})
+                lp_metrics = result.data()[0]
+                adamic_adar_values[second_ip] = lp_metrics['score_aa']
+        adamic_adar_values = {key: value for key, value in sorted(adamic_adar_values.items(),
+                                                                  key=lambda item: item[1], reverse=True)}
+        print("First IP: ", first_ip)
+        print(adamic_adar_values)
+        x, y, value = find_elbow(list(range(0, len(adamic_adar_values.keys()))), list(adamic_adar_values.values()))
+        print("Elbow's x: ", x, ", y: ", y, ", value: ", value)
+        print()
+
+        # TODO ELBOW METHOD sa mi zdala nic moc, skusil by som ine optimalizacne kriterium
