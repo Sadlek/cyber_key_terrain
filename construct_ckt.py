@@ -10,8 +10,8 @@ from math import sqrt
 
 
 BOLT = 'bolt://localhost:7687'
-# DRIVER = GraphDatabase.driver(BOLT, auth=basic_auth("neo4j", "ne04jcrus03"), encrypted=False)
-DRIVER = GraphDatabase.driver(BOLT, auth=basic_auth("neo4j", "Neo4jPas"), encrypted=False)
+DRIVER = GraphDatabase.driver(BOLT, auth=basic_auth("neo4j", "ne04jcrus03"), encrypted=False)
+# DRIVER = GraphDatabase.driver(BOLT, auth=basic_auth("neo4j", "Neo4jPas"), encrypted=False)
 
 
 def obtain_pairs_of_ip_addresses(ip_flow_filename, syslog_filename, ip_addresses=None):
@@ -353,6 +353,20 @@ flow_ips = ['9.66.11.12', '9.66.11.13', '9.66.11.14', '10.1.2.22', '10.1.2.23', 
             '4.122.55.22', '4.122.55.23', '4.122.55.24', '4.122.55.25', '4.122.55.26', '4.122.55.250']
 
 
+def obtain_link_prediction_metrics(first_ip, second_ip):
+    with (DRIVER.session()) as session:
+        result = session.run("MATCH (p1:IP_ADDRESS {address: $first_ip}) "
+                             "MATCH (p2:IP_ADDRESS {address: $second_ip}) "
+                             "RETURN gds.alpha.linkprediction.adamicAdar(p1, p2) AS score_aa, "
+                             "gds.alpha.linkprediction.commonNeighbors(p1, p2) AS score_cn, "
+                             "gds.alpha.linkprediction.preferentialAttachment(p1, p2) AS score_pa, "
+                             "gds.alpha.linkprediction.resourceAllocation(p1, p2) AS score_ra, "
+                             "gds.alpha.linkprediction.sameCommunity(p1, p2) AS score_sc, "
+                             "gds.alpha.linkprediction.totalNeighbors(p1, p2) AS score_tn",
+                             **{'first_ip': first_ip, 'second_ip': second_ip})
+        return result.data()[0]
+
+
 def measure_link_prediction(list_of_ips):
     function_result = []
     for first_ip in list_of_ips:
@@ -361,28 +375,26 @@ def measure_link_prediction(list_of_ips):
                 continue
 
             # Adamic-Adar
-            with (DRIVER.session()) as session:
-                result = session.run("MATCH (p1:IP_ADDRESS {address: $first_ip}) "
-                                     "MATCH (p2:IP_ADDRESS {address: $second_ip}) "
-                                     "RETURN gds.alpha.linkprediction.adamicAdar(p1, p2) AS score_aa, "
-                                     "gds.alpha.linkprediction.commonNeighbors(p1, p2) AS score_cn, "
-                                     "gds.alpha.linkprediction.preferentialAttachment(p1, p2) AS score_pa, "
-                                     "gds.alpha.linkprediction.resourceAllocation(p1, p2) AS score_ra, "
-                                     "gds.alpha.linkprediction.sameCommunity(p1, p2) AS score_sc, "
-                                     "gds.alpha.linkprediction.totalNeighbors(p1, p2) AS score_tn",
-                                     **{'first_ip': first_ip, 'second_ip': second_ip})
-                # score = result.data()[0]['score']
-                # if score != 0:
-                lp_metrics = result.data()[0]
-                if lp_metrics['score_aa'] != 0:
-                    print("first: ", first_ip, ", second: ", second_ip, ", Adamic-Adar: ", lp_metrics['score_aa'],
-                          ", Common Neighbors: ", lp_metrics['score_cn'], ", Pref. Att.: ", lp_metrics['score_pa'],
-                          ", Res. Allocation: ", lp_metrics['score_ra'], ", Same Community: ", lp_metrics['score_sc'],
-                          ", Tot. Neighbors: ", lp_metrics['score_tn'])
-                    function_result.append({"first": first_ip, "second": second_ip, "score_aa": lp_metrics['score_aa'],
-                                            "score_cn": lp_metrics['score_cn'], "score_pa": lp_metrics['score_pa'],
-                                            "score_ra": lp_metrics['score_ra'], "score_sc": lp_metrics['score_sc'],
-                                            "score_tn": lp_metrics['score_tn']})
+            # with (DRIVER.session()) as session:
+            #     result = session.run("MATCH (p1:IP_ADDRESS {address: $first_ip}) "
+            #                          "MATCH (p2:IP_ADDRESS {address: $second_ip}) "
+            #                          "RETURN gds.alpha.linkprediction.adamicAdar(p1, p2) AS score_aa, "
+            #                          "gds.alpha.linkprediction.commonNeighbors(p1, p2) AS score_cn, "
+            #                          "gds.alpha.linkprediction.preferentialAttachment(p1, p2) AS score_pa, "
+            #                          "gds.alpha.linkprediction.resourceAllocation(p1, p2) AS score_ra, "
+            #                          "gds.alpha.linkprediction.sameCommunity(p1, p2) AS score_sc, "
+            #                          "gds.alpha.linkprediction.totalNeighbors(p1, p2) AS score_tn",
+            #                          **{'first_ip': first_ip, 'second_ip': second_ip})
+            lp_metrics = obtain_link_prediction_metrics(first_ip, second_ip)
+            if lp_metrics['score_aa'] != 0:
+                print("first: ", first_ip, ", second: ", second_ip, ", Adamic-Adar: ", lp_metrics['score_aa'],
+                      ", Common Neighbors: ", lp_metrics['score_cn'], ", Pref. Att.: ", lp_metrics['score_pa'],
+                      ", Res. Allocation: ", lp_metrics['score_ra'], ", Same Community: ", lp_metrics['score_sc'],
+                      ", Tot. Neighbors: ", lp_metrics['score_tn'])
+                function_result.append({"first": first_ip, "second": second_ip, "score_aa": lp_metrics['score_aa'],
+                                        "score_cn": lp_metrics['score_cn'], "score_pa": lp_metrics['score_pa'],
+                                        "score_ra": lp_metrics['score_ra'], "score_sc": lp_metrics['score_sc'],
+                                        "score_tn": lp_metrics['score_tn']})
         print()
     return function_result
 
@@ -411,7 +423,8 @@ def prevailing_outcoming_connections(first_ip, second_ip,
 # pokial node zvykne odpovedat na prichadzajuce spojenia alebo vysielat spojenia, tak dame smer, inak nechame
 # neorientovanu hranu
 
-def compute_ckt():
+
+def get_pagerank_results():
     page_rank_result = []
     with (DRIVER.session()) as session:
         page_rank = session.run("CALL gds.pageRank.stream( "
@@ -424,7 +437,49 @@ def compute_ckt():
                              "RETURN gds.util.asNode(nodeId).address AS address, score "
                              "ORDER BY score DESC, address ASC")
         page_rank_result = page_rank.data()
-        pprint(page_rank_result)
+    return page_rank_result
+
+
+def compute_dependencies(list_of_ips):
+    ckt_results = {}
+    ips_to_be_processed = []
+    page_rank_result = get_pagerank_results()
+    ip_addresses = [item['address'] for item in page_rank_result]
+    scores = [item['score'] for item in page_rank_result]
+
+    x, y, value = find_elbow(range(0, len(ip_addresses)), scores)
+    # print("x: ", x, ", y: ", y, ", value: ", value)
+    for list_item in page_rank_result:
+        # print("list_item", list_item)
+        if list_item['score'] >= y:
+            ips_to_be_processed.append(list_item['address'])
+            ckt_results[list_item['address']] = list_item['score']
+
+    # print("ips to be processed", ips_to_be_processed)
+    while ips_to_be_processed:
+        print("ips to be processed: ", ips_to_be_processed)
+        current_ip = ips_to_be_processed.pop(0)
+        lp_metrics_results = {}
+        for second_ip in list_of_ips:
+            if second_ip != current_ip:
+                lp_metrics = obtain_link_prediction_metrics(current_ip, second_ip)
+                lp_metrics_results[second_ip] = lp_metrics['score_aa']
+        lp_metrics_sorted = {key: value for key, value in sorted(lp_metrics_results.items(),
+                                                                 key=lambda item: item[1], reverse=True)}
+        # print(lp_metrics_sorted)
+        current_x, current_y, current_value = find_elbow(list(range(0, len(lp_metrics_sorted.keys()))),
+                                                         list(lp_metrics_sorted.values()))
+        for second_ip in lp_metrics_sorted:
+            if lp_metrics_sorted[second_ip] >= current_y:
+                create_dependency_in_database(current_ip, second_ip, lp_metrics_sorted[second_ip])
+                if second_ip not in ckt_results:
+                    ips_to_be_processed.append(second_ip)
+                    ckt_results[second_ip] = lp_metrics_sorted[second_ip]
+
+
+def compute_ckt():
+    page_rank_result = get_pagerank_results()
+    pprint(page_rank_result)
 
     ckt = {}
     for list_item in page_rank_result:
@@ -657,6 +712,7 @@ def create_reversed_dependencies():
         for second_ip in adamic_adar_results[first_ip]:
             create_dependency_in_database(second_ip, first_ip, adamic_adar_results[first_ip][second_ip])
 
+
 adamic_adar_results = {
     "9.66.11.12": {'9.66.11.13': 3.1682154206892323, '9.66.11.14': 2.586802299994103},
     "9.66.11.13": {'9.66.11.12': 3.1682154206892323, '4.122.55.22': 2.8070460510310404},
@@ -805,6 +861,10 @@ adamic_adar_results = {
 }
 
 
+# TODO najdi CKT pre vstupne zariadenie, napr. webserver, dependencies su v zasade celkom dobre urcene,
+#  nevyhoda je, ze Adamic Adar je undirected
+# TODO pozriet sa na zariadenia, s kt. komunikoval host najviac a to takisto zaradit, napr. pre 9.66.11.12 by podla
+#  priamej komunikacie bolo dobre zvazit aj 4.122.55.5 alebo 4.122.55.3?
 # First IP:  9.66.11.12
 # {'9.66.11.13': 3.1682154206892323, '9.66.11.14': 2.586802299994103, '4.122.55.22': 2.352923866316978, '4.122.55.23': 2.352923866316978, '4.122.55.24': 2.352923866316978, '4.122.55.25': 2.352923866316978, '4.122.55.26': 2.352923866316978, '4.122.55.3': 2.2742817326715814, '10.1.2.29': 2.0728282924361134, '4.122.55.21': 1.9187565607303823, '10.1.4.46': 1.6591300616795115, '10.1.4.47': 1.6591300616795115, '4.122.55.117': 1.6082852280026443, '10.1.2.22': 1.5491447085900847, '10.1.2.25': 1.5434379354683256, '10.1.2.27': 1.5434379354683256, '10.1.4.48': 1.5434379354683256, '10.1.4.49': 1.5434379354683256, '10.1.4.44': 1.5434379354683256, '10.1.4.45': 1.5434379354683256, '10.1.2.26': 1.4546334385235433, '4.122.55.5': 1.4368788226532314, '4.122.55.250': 1.4204215937206994, '10.1.2.28': 1.4180458330053654, '4.122.55.113': 1.4028424088138856, '4.122.55.114': 1.4028424088138856, '4.122.55.115': 1.4028424088138856, '10.1.4.42': 1.3567066038811884, '4.122.55.112': 1.3071195801727997, '10.1.3.34': 1.2532012628524414, '4.122.55.111': 1.2354478493619347, '4.122.55.2': 1.2149787745319407, '4.122.55.4': 1.2149787745319407, '4.122.55.6': 1.2149787745319407, '10.1.3.33': 1.1254624962725082, '10.1.4.43': 1.1254624962725082, '4.122.55.7': 1.1092706298817299, '10.1.2.23': 1.013547801240644, '10.1.2.24': 1.013547801240644, '10.1.3.32': 1.013547801240644, '9.66.11.12': 0.0}
 # Elbow's x:  1 , y:  2.586802299994103 , value:  0.3475346870180047
@@ -970,6 +1030,9 @@ adamic_adar_results = {
 # Elbow's x:  6 , y:  2.8202846663759034 , value:  0.4760366099638711
 
 # Louvain method - ina metoda by mozno dala lepsie vysledky
+# CALL gds.louvain.stream({ nodeProjection: 'IP_ADDRESS', relationshipProjection: 'DEPENDENCY'})
+# YIELD nodeId, communityId, intermediateCommunityIds RETURN gds.util.asNode(nodeId).address AS address,
+# communityId, intermediateCommunityIds ORDER BY address ASC
 # CLUSTERS with IDs:
 # 450 - 10.1.1.14
 # 38 - 10.1.2.22, 10.1.2.23, 10.1.2.24, 10.1.3.32, 10.1.3.33, 10.1.3.34, 10.1.4.42, 10.1.4.43, 10.1.4.46,
@@ -989,6 +1052,9 @@ adamic_adar_results = {
 # 176 - 4.122.55.36
 
 # Label Propagation method
+# CALL gds.labelPropagation.stream({ nodeProjection: 'IP_ADDRESS', relationshipProjection: 'DEPENDENCY'})
+# YIELD nodeId, communityId AS Community RETURN gds.util.asNode(nodeId).address AS address, Community ORDER BY
+# address DESC
 # CLUSTERS with IDs:
 # 454 - 10.1.1.14
 # 27 - 10.1.2.22, 10.1.2.23, 10.1.2.24, 10.1.3.32, 10.1.3.33, 10.1.4.42, 10.1.4.43, 10.1.4.46,
@@ -1011,11 +1077,15 @@ adamic_adar_results = {
 # 180 - 4.122.55.36
 
 # Weakly connected component
+# CALL gds.wcc.stream({ nodeProjection: 'IP_ADDRESS', relationshipProjection: 'DEPENDENCY'})
+# YIELD nodeId, componentId RETURN gds.util.asNode(nodeId).address AS address, componentId ORDER BY address ASC
 # vsetky podstatne komponenty tvoria jednu weakly connected components
 
 # Modularity optimization - pretecie halda
 
 # Strongly connected components
+# CALL gds.alpha.scc.stream({ nodeProjection: 'IP_ADDRESS', relationshipProjection: 'DEPENDENCY'})
+# YIELD nodeId, componentId RETURN gds.util.asNode(nodeId).address AS address, componentId ORDER BY address ASC
 # 450 - 10.1.1.14,
 # 45 - 10.1.2.22, 10.1.3.32, 10.1.3.33, 10.1.4.42, 10.1.4.43, 10.1.4.46, 10.1.4.47,
 #      9.66.11.14
