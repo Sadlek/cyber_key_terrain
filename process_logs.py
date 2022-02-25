@@ -1,3 +1,4 @@
+import re
 from pprint import pprint
 import json
 
@@ -373,3 +374,106 @@ winlog_ips = ['10.7.101.14', '10.7.101.22', '10.7.101.23', '10.7.101.24', '10.7.
 # nagios-global
 # 4.122.55.250
 # 10.7.100.250
+
+
+# SYSLOG_IPS contains list of ips from syslog which contain in their message some other IPs
+SYSLOG_IPS = ['10.7.100.111', '10.7.100.112', '10.7.100.113', '10.7.100.114', '10.7.100.115', '10.7.100.116',
+            '10.7.100.2', '10.7.100.21', '10.7.100.22', '10.7.100.23', '10.7.100.24', '10.7.100.25', '10.7.100.26',
+            '10.7.100.3', '10.7.100.4', '10.7.100.5', '10.7.100.6', '10.7.100.7', '10.7.101.12', '10.7.101.13',
+            '10.7.101.25', '10.7.101.250', '10.7.101.26', '10.7.101.27', '10.7.101.28', '10.7.101.29', '10.7.101.34',
+            '10.7.101.44', '10.7.101.45', '10.7.101.48', '10.7.101.49', '10.7.102.12', '10.7.102.13', '10.7.102.25',
+            '10.7.102.250', '10.7.102.26', '10.7.102.27', '10.7.102.28', '10.7.102.29', '10.7.102.34', '10.7.102.44',
+            '10.7.102.45', '10.7.102.48', '10.7.102.49', '10.7.103.12', '10.7.103.13', '10.7.103.25', '10.7.103.250',
+            '10.7.103.26', '10.7.103.27', '10.7.103.28', '10.7.103.29', '10.7.103.34', '10.7.103.44', '10.7.103.45',
+            '10.7.103.48', '10.7.103.49', '10.7.104.12', '10.7.104.13', '10.7.104.25', '10.7.104.250', '10.7.104.26',
+            '10.7.104.27', '10.7.104.28', '10.7.104.29', '10.7.104.34', '10.7.104.44', '10.7.104.45', '10.7.104.48',
+            '10.7.104.49', '10.7.105.12', '10.7.105.13', '10.7.105.25', '10.7.105.250', '10.7.105.26', '10.7.105.27',
+            '10.7.105.28', '10.7.105.29', '10.7.105.34', '10.7.105.44', '10.7.105.45', '10.7.105.48', '10.7.105.49',
+            '10.7.106.12', '10.7.106.13', '10.7.106.25', '10.7.106.250', '10.7.106.26', '10.7.106.27', '10.7.106.28',
+            '10.7.106.29', '10.7.106.34', '10.7.106.44', '10.7.106.45', '10.7.106.48', '10.7.106.49']
+
+
+# WINLOG_IPS contains list of ips from winlog which contain in their message some other IPs
+WINLOG_IPS = ['10.7.101.14', '10.7.101.22', '10.7.101.23', '10.7.101.24', '10.7.101.32', '10.7.101.33',
+            '10.7.101.42', '10.7.101.43', '10.7.101.46', '10.7.101.47', '10.7.102.14', '10.7.102.22', '10.7.102.23',
+            '10.7.102.24', '10.7.102.32', '10.7.102.33', '10.7.102.42', '10.7.102.43', '10.7.102.46', '10.7.102.47',
+            '10.7.103.14', '10.7.103.22', '10.7.103.23', '10.7.103.24', '10.7.103.32', '10.7.103.33', '10.7.103.42',
+            '10.7.103.43', '10.7.103.46', '10.7.103.47', '10.7.104.14', '10.7.104.22', '10.7.104.23', '10.7.104.24',
+            '10.7.104.32', '10.7.104.33', '10.7.104.42', '10.7.104.43', '10.7.104.46', '10.7.104.47', '10.7.105.14',
+            '10.7.105.22', '10.7.105.23', '10.7.105.24', '10.7.105.32', '10.7.105.33', '10.7.105.42', '10.7.105.43',
+            '10.7.105.46', '10.7.105.47', '10.7.106.22', '10.7.106.23', '10.7.106.24', '10.7.106.33', '10.7.106.42',
+            '10.7.106.43']
+
+
+def find_syslog_ips(input_file='data/data_syslog.json'):
+    # 5069256 entries
+    # subnets - '10.7.100.', '10.7.101.', '10.7.102.', '10.7.103.', '10.7.104.', '10.7.105.', '10.7.106.'
+    counter = 0
+    ips_with_ips_in_message = set()
+    with open(input_file, 'r') as jsonfile:
+        for line in jsonfile:
+            data = json.loads(line)
+            result = re.search(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", data["message"])
+            if result:
+                counter += 1
+                ips_with_ips_in_message.add(data["fromhost_ip"])
+                print(data["fromhost_ip"])
+    return ips_with_ips_in_message
+    # return counter
+
+
+def find_winlog_ips(input_file='data/data_winlog.json'):
+    # 73671
+    # subnets - '10.7.101.', '10.7.102.', '10.7.103.', '10.7.104.', '10.7.105.', '10.7.106.'
+    counter = 0
+    ips_with_ips_in_message = set()
+    with open(input_file, 'r') as jsonfile:
+        for line in jsonfile:
+            data = json.loads(line)
+            result = re.search(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", data["xml"])
+            if result:
+                counter += 1
+                ips_with_ips_in_message.add(data["host_ip"])
+                print(data["host_ip"])
+    return ips_with_ips_in_message
+    # return counter
+
+
+def determine_subnet(ip_address):
+    if ip_address.startswith('10.7.100.'):
+        return '10.7.100.'
+    elif ip_address.startswith('10.7.101.'):
+        return '10.7.101.'
+    elif ip_address.startswith('10.7.102.'):
+        return '10.7.102.'
+    elif ip_address.startswith('10.7.103.'):
+        return '10.7.103.'
+    elif ip_address.startswith('10.7.104.'):
+        return '10.7.104.'
+    elif ip_address.startswith('10.7.105.'):
+        return '10.7.105.'
+    elif ip_address.startswith('10.7.106.'):
+        return '10.7.106.'
+
+
+def add_syslog_communication_within_networks(input_file='data/data_syslog.json'):
+    with open(input_file, 'r') as jsonfile:
+        for line in jsonfile:
+            data = json.loads(line)
+            if data["fromhost_ip"] in SYSLOG_IPS:
+                # print("fromhost_ip, ", data["fromhost_ip"])
+                subnet = determine_subnet(data["fromhost_ip"])
+                # print("subnet, ", subnet)
+                result = re.findall(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", data["message"])
+                ips_to_be_created = set()
+                # print("result", result)
+                for ip in result:
+                    if ip.startswith(subnet) and ip != data["fromhost_ip"] and not ip.endswith('250') and \
+                            not data["fromhost_ip"].endswith('250'):
+                        print("ip is processed, ", ip)
+                        ips_to_be_created.add(ip)
+                if ips_to_be_created:
+                    print("result, ", result)
+                    print("IPs: ", ips_to_be_created, " communicated with IP: ", data["fromhost_ip"], ", timestamp",
+                          data["timestamp"])
+    print("end")

@@ -8,6 +8,14 @@ from neo4j import GraphDatabase, basic_auth
 from pprint import pprint
 from math import sqrt
 
+# TODO zoznam veci, kt. je potreba vyriesit
+#  1.) link prediction vs. existing links
+#  2.) timestamps
+#  3.) orientation of edges
+#  4.) optimization criteria
+#  5.) method that determines dependencies for specific devices
+#  6.) new data, communication within subnets
+
 
 BOLT = 'bolt://localhost:7687'
 DRIVER = GraphDatabase.driver(BOLT, auth=basic_auth("neo4j", "ne04jcrus03"), encrypted=False)
@@ -713,6 +721,8 @@ def create_reversed_dependencies():
             create_dependency_in_database(second_ip, first_ip, adamic_adar_results[first_ip][second_ip])
 
 
+# Toto nie su nezmysly, pretoze chybaju data z vnutornych subnetov, t.j. komunikacia v ramci BT subnetu
+# v realnej sieti to tak nemusi byt
 adamic_adar_results = {
     "9.66.11.12": {'9.66.11.13': 3.1682154206892323, '9.66.11.14': 2.586802299994103},
     "9.66.11.13": {'9.66.11.12': 3.1682154206892323, '4.122.55.22': 2.8070460510310404},
