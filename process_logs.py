@@ -1,6 +1,12 @@
 import re
 from pprint import pprint
 import json
+from neo4j import GraphDatabase, basic_auth
+
+
+BOLT = 'bolt://localhost:7687'
+DRIVER = GraphDatabase.driver(BOLT, auth=basic_auth("neo4j", "ne04jcrus03"), encrypted=False)
+# DRIVER = GraphDatabase.driver(BOLT, auth=basic_auth("neo4j", "Neo4jPas"), encrypted=False)
 
 
 def filter_device(device_name):
@@ -457,6 +463,7 @@ def determine_subnet(ip_address):
 
 
 def add_syslog_communication_within_networks(input_file='data/data_syslog.json'):
+    counter = 0
     with open(input_file, 'r') as jsonfile:
         for line in jsonfile:
             data = json.loads(line)
@@ -466,14 +473,45 @@ def add_syslog_communication_within_networks(input_file='data/data_syslog.json')
                 # print("subnet, ", subnet)
                 result = re.findall(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", data["message"])
                 ips_to_be_created = set()
+                ip_translation = set()
                 # print("result", result)
                 for ip in result:
-                    if ip.startswith(subnet) and ip != data["fromhost_ip"] and not ip.endswith('250') and \
+                    # TODO tu je chyba, že napr. pre mail server 10.7.101.12 sú v logoch použité zelené IP, teda napr.
+                    #  10.0.4.43
+                    # if ip.startswith(subnet) and \
+                    if not ip.endswith('.1') and not data["fromhost_ip"].startswith('10.7.100.') and \
+                            not ip.endswith(re.search(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.(?P<last_ip>\d{1,3})",
+                                                      data["fromhost_ip"]).group('last_ip')) and \
+                            not ip.startswith('255.') and " lost " not in data["message"] and \
+                            " disconnect " not in data["message"] and\
+                            ip.startswith('10.0.') and\
+                            ip != data["fromhost_ip"] and not ip.endswith('250') and \
                             not data["fromhost_ip"].endswith('250'):
-                        print("ip is processed, ", ip)
+                        # print("ip is processed, ", ip)
                         ips_to_be_created.add(ip)
+                        last_group = re.search(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.(?P<last_ip>\d{1,3})",
+                                                              ip).group('last_ip')
+                        # print("last group", last_group)
+                        # print("subnet", subnet)
+                        ip_translation.add(subnet + last_group)
                 if ips_to_be_created:
-                    print("result, ", result)
-                    print("IPs: ", ips_to_be_created, " communicated with IP: ", data["fromhost_ip"], ", timestamp",
-                          data["timestamp"])
+                    # print("result, ", result)
+                    # temprorary for BT1 subnet
+                    if data["fromhost_ip"].startswith("10.7.101."):
+                        for ip_entry in ip_translation:
+                            create_link_from_logs(ip_entry, data["fromhost_ip"], data["timestamp"])
+                            # print("IPs: ", ips_to_be_created, ", translation: ", ip_translation, " communicated with IP: ",
+                            #       data["fromhost_ip"], ", timestamp", data["timestamp"])
+                            counter += 1
     print("end")
+    return counter
+
+
+def create_link_from_logs(src_ip, dst_ip, timestamp):
+    with(DRIVER.session()) as session:
+        session.run(
+            "MERGE (a:IP_ADDRESS {address: $first_ip}) "
+            "MERGE (b:IP_ADDRESS {address: $second_ip}) "
+            "CREATE (a)-[:LOG_COMMUNICATION {timestamp: $timestamp}]->(b)",
+            **{'first_ip': src_ip, 'second_ip': dst_ip, 'timestamp': timestamp})
+    print("created src_ip: ", src_ip, ", dst_ip: ", dst_ip, ", timestamp: ", timestamp)
