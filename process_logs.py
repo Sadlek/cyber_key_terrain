@@ -44,9 +44,9 @@ def filter_winlog_events(list_of_ip_addresses, input_file='data/data_winlog.json
 
 def filter_ip_flows(list_of_ip_addresses, input_file='data/data_ipflow.json'):
     output_lines = []
-    with open(f'data_filtered/data_ipflow_filtered.json', 'w') as output_file:
+    with open(f'data_filtered/data_ipflow_filtered2.json', 'w') as output_file:
         with open(input_file, 'r') as jsonfile:
-            for line in jsonfile.readlines():
+            for line in jsonfile:
                 data = json.loads(line)
                 if data["destinationIPv4Address"] in list_of_ip_addresses or \
                         data["sourceIPv4Address"] in list_of_ip_addresses:
@@ -499,10 +499,13 @@ def add_syslog_communication_within_networks(input_file='data/data_syslog.json')
                     # temprorary for BT1 subnet
                     if data["fromhost_ip"].startswith("10.7.101."):
                         for ip_entry in ip_translation:
-                            create_link_from_logs(ip_entry, data["fromhost_ip"], data["timestamp"])
-                            # print("IPs: ", ips_to_be_created, ", translation: ", ip_translation, " communicated with IP: ",
-                            #       data["fromhost_ip"], ", timestamp", data["timestamp"])
-                            counter += 1
+                            if ip_entry in LOG_TO_FLOW_TRANSLATION and \
+                                    data["fromhost_ip"] in LOG_TO_FLOW_TRANSLATION:
+                                create_link_from_logs(LOG_TO_FLOW_TRANSLATION[ip_entry],
+                                                      LOG_TO_FLOW_TRANSLATION[data["fromhost_ip"]], data["timestamp"])
+                                # print("IPs: ", ips_to_be_created, ", translation: ", ip_translation, " communicated with IP: ",
+                                #       data["fromhost_ip"], ", timestamp", data["timestamp"])
+                                counter += 1
     print("end")
     return counter
 
@@ -515,3 +518,77 @@ def create_link_from_logs(src_ip, dst_ip, timestamp):
             "CREATE (a)-[:LOG_COMMUNICATION {timestamp: $timestamp}]->(b)",
             **{'first_ip': src_ip, 'second_ip': dst_ip, 'timestamp': timestamp})
     print("created src_ip: ", src_ip, ", dst_ip: ", dst_ip, ", timestamp: ", timestamp)
+
+
+def add_winlog_communication_from_logs(input_file='data/data_winlog.json'):
+    counter = 0
+    with open(input_file, 'r') as jsonfile:
+        for line in jsonfile:
+            data = json.loads(line)
+            if data["host_ip"] in WINLOG_IPS:
+                # print("fromhost_ip, ", data["fromhost_ip"])
+                subnet = determine_subnet(data["host_ip"])
+                # print("subnet, ", subnet)
+                result = re.findall(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", data["xml"])
+                ips_to_be_created = set()
+                ip_translation = set()
+                # print("result", result)
+                for ip in result:
+                    # TODO tu je chyba, že napr. pre mail server 10.7.101.12 sú v logoch použité zelené IP, teda napr.
+                    #  10.0.4.43
+                    # if ip.startswith(subnet) and \
+                    if not ip.endswith('.1') and not data["host_ip"].startswith('10.7.100.') and \
+                            not ip.endswith(re.search(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.(?P<last_ip>\d{1,3})",
+                                                      data["host_ip"]).group('last_ip')) and \
+                            not ip.startswith('255.') and " lost " not in data["xml"] and \
+                            " disconnect " not in data["xml"] and \
+                            ip.startswith('10.0.') and \
+                            ip != data["host_ip"] and not ip.endswith('250') and \
+                            not data["host_ip"].endswith('250'):
+                        # print("ip is processed, ", ip)
+                        ips_to_be_created.add(ip)
+                        last_group = re.search(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.(?P<last_ip>\d{1,3})",
+                                               ip).group('last_ip')
+                        # print("last group", last_group)
+                        # print("subnet", subnet)
+                        ip_translation.add(subnet + last_group)
+                if ips_to_be_created:
+                    # print("result, ", result)
+                    # temprorary for BT1 subnet
+                    if data["host_ip"].startswith("10.7.101."):
+                        for ip_entry in ip_translation:
+                            if ip_entry in LOG_TO_FLOW_TRANSLATION and \
+                                    data["host_ip"] in LOG_TO_FLOW_TRANSLATION:
+                                create_link_from_logs(LOG_TO_FLOW_TRANSLATION[ip_entry],
+                                                      LOG_TO_FLOW_TRANSLATION[data["host_ip"]], data["timestamp"])
+                                # print("IPs: ", ips_to_be_created, ", translation: ", ip_translation, " communicated with IP: ",
+                                #       data["host_ip"], ", timestamp", data["timestamp"])
+                                counter += 1
+    print("end")
+    return counter
+
+
+LOG_TO_FLOW_TRANSLATION = {
+    "10.7.101.12": "9.66.11.12",
+    "10.7.101.13": "9.66.11.13",
+    "10.7.101.14": "9.66.11.14",
+    "10.7.101.22": "10.1.2.22",
+    "10.7.101.23": "10.1.2.23",
+    "10.7.101.24": "10.1.2.24",
+    "10.7.101.25": "10.1.2.25",
+    "10.7.101.26": "10.1.2.26",
+    "10.7.101.27": "10.1.2.27",
+    "10.7.101.28": "10.1.2.28",
+    "10.7.101.29": "10.1.2.29",
+    "10.7.101.32": "10.1.3.32",
+    "10.7.101.33": "10.1.3.33",
+    "10.7.101.34": "10.1.3.34",
+    "10.7.101.42": "10.1.4.42",
+    "10.7.101.43": "10.1.4.43",
+    "10.7.101.44": "10.1.4.44",
+    "10.7.101.45": "10.1.4.45",
+    "10.7.101.46": "10.1.4.46",
+    "10.7.101.47": "10.1.4.47",
+    "10.7.101.48": "10.1.4.48",
+    "10.7.101.49": "10.1.4.49"
+}

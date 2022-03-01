@@ -432,13 +432,13 @@ def prevailing_outcoming_connections(first_ip, second_ip,
 # neorientovanu hranu
 
 
-def get_pagerank_results():
+def get_pagerank_results(relationship_name='COMMUNICATES_WITH'):
     page_rank_result = []
     with (DRIVER.session()) as session:
         page_rank = session.run("CALL gds.pageRank.stream( "
                              "{ "
                              "nodeProjection: 'IP_ADDRESS', "
-                             "relationshipProjection: 'COMMUNICATES_WITH' "
+                             f"relationshipProjection: '{relationship_name}' "
                              "} "
                              ") "
                              "YIELD nodeId, score "
@@ -454,9 +454,10 @@ def compute_dependencies(list_of_ips):
     page_rank_result = get_pagerank_results()
     ip_addresses = [item['address'] for item in page_rank_result]
     scores = [item['score'] for item in page_rank_result]
+    print("page rank result", page_rank_result)
 
     x, y, value = find_elbow(range(0, len(ip_addresses)), scores)
-    # print("x: ", x, ", y: ", y, ", value: ", value)
+    print("x: ", x, ", y: ", y, ", value: ", value)
     for list_item in page_rank_result:
         # print("list_item", list_item)
         if list_item['score'] >= y:
@@ -465,8 +466,9 @@ def compute_dependencies(list_of_ips):
 
     # print("ips to be processed", ips_to_be_processed)
     while ips_to_be_processed:
-        print("ips to be processed: ", ips_to_be_processed)
+        # print("ips to be processed: ", ips_to_be_processed)
         current_ip = ips_to_be_processed.pop(0)
+        print("current_ip is", current_ip)
         lp_metrics_results = {}
         for second_ip in list_of_ips:
             if second_ip != current_ip:
@@ -474,9 +476,10 @@ def compute_dependencies(list_of_ips):
                 lp_metrics_results[second_ip] = lp_metrics['score_aa']
         lp_metrics_sorted = {key: value for key, value in sorted(lp_metrics_results.items(),
                                                                  key=lambda item: item[1], reverse=True)}
-        # print(lp_metrics_sorted)
+        print(lp_metrics_sorted)
         current_x, current_y, current_value = find_elbow(list(range(0, len(lp_metrics_sorted.keys()))),
                                                          list(lp_metrics_sorted.values()))
+        print("elbow is: ", current_x, current_y, current_value)
         for second_ip in lp_metrics_sorted:
             if lp_metrics_sorted[second_ip] >= current_y:
                 create_dependency_in_database(current_ip, second_ip, lp_metrics_sorted[second_ip])
