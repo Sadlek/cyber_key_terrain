@@ -1122,3 +1122,28 @@ adamic_adar_results = {
 # 176 - 4.122.55.36
 
 # Triangle counting - vypisuje iba trojuholniky
+
+# ==============================================
+# Vyhodnotenie nad reálnymi dátami z MU
+# Extrémne všetkých prevyšuje time server (MU),
+# potom nasleduje nejaký jihomoravský kraj, nejaký školský server pre nejakú strednú školu (oba mimo MU)
+# potom z MU ide FTP server, kt. je vraj jeden z najvyťaženejších v rámci CESNETu, name server, mail server,
+# ARES server pre fakultu informatiky - router, firewall, DNS, DHCP,
+# eduroam server
+
+# 147.251.48.140 123 - časový server podľa protokolu
+
+# CALL gds.pageRank.stream({nodeQuery: 'MATCH (n) RETURN id(n) AS id', relationshipQuery: 'MATCH
+# (ip1:IP_ADDRESS)-[r:COMMUNICATES_WITH]->(ip2:IP_ADDRESS) WHERE NOT ip1.address STARTS WITH "147.251."
+# AND ip2.address STARTS WITH "147.251." RETURN DISTINCT id(ip1) AS source, id(ip2) AS target'})
+# YIELD nodeId, score RETURN gds.util.asNode(nodeId).address AS address, score ORDER BY score DESC, address ASC
+# dával dobré výsledky
+
+
+# TODO link prediction - na zaklade dat z predchadzajuceho casoveho okna urcit, kde by mohla byt hrana dependency
+#  do buducna, pricom moze byt aj medzi takymi dvoma vrcholmi, kde je v aktualnom casovom okne communication
+#  dalsia vec - budeme mat v databazi velke mnozstvo hran roznych typov, kde typ bude podla cisla protokolu
+#  my predpovedame pre dany typ hrany, ze nejake zariadenie by mohlo vyzadovat takuto komunikaciu, napr. NTP, DNS
+#  a zmeriame precision a accuracy podla toho, kolko zariadeni bude v ramci navrhnutych zariadeni spravnych a kolko
+#  spravnych ostane vonku. Podla toho mozeme urcit, ci sa da brat este viac dependencies zo zoznamu alebo nie.
+#  Elbow rule dava prilis male thresholdy, bude potreba lepsie pravidlo.
