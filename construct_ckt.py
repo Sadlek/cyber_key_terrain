@@ -1147,3 +1147,17 @@ adamic_adar_results = {
 #  a zmeriame precision a accuracy podla toho, kolko zariadeni bude v ramci navrhnutych zariadeni spravnych a kolko
 #  spravnych ostane vonku. Podla toho mozeme urcit, ci sa da brat este viac dependencies zo zoznamu alebo nie.
 #  Elbow rule dava prilis male thresholdy, bude potreba lepsie pravidlo.
+
+# https://apps.dtic.mil/sti/pdfs/ADA550373.pdf Determining Asset Criticality for Cyber Defense
+# PageRank sa vraj nedá použiť, lebo nie všetky závislosti majú rovnakú silu a vlastnosti, ale keď použijeme
+# PageRank a link prediction na komunikáciu vždy na tom istom porte, tak by to mohlo dávať väčší zmysel.
+
+# Určovanie kritických zariadení by potom fungovalo tak, že dostaneme na vstupe:
+# protokol a PageRank
+# device a k nemu nejaké závislosti na dôležitých portoch
+
+# PageRank aplikovaný na jednotlivé dst porty
+# 443 - vychadza IS server
+# 53 - DNS servery,
+# 80 - fakultny multifunkcny server
+# 123 - pyrrha NTP server
