@@ -97,14 +97,14 @@ def get_ips_that_communicated(ip_flow_filename='data/data_ipflow.json'):
     return ip_flow_dictionary
 
 
-def create_ips_in_db(time_treshold=1552989909721, ip_flow_filename='data/data_ipflow.json'):
-    ip_flow_dict = get_ips_that_communicated(ip_flow_filename)
-    for (src_ip, dst_ip) in ip_flow_dict:
-        if (src_ip.startswith('9.') or src_ip.startswith('10.') or src_ip.startswith('4.')) and \
-                (dst_ip.startswith('9.') or dst_ip.startswith('10.') or dst_ip.startswith('4.')):
-            for (start, end, event_list) in ip_flow_dict[(src_ip, dst_ip)]:
-                if end <= time_treshold:
-                    create_connections_in_database(src_ip, dst_ip, start, end)
+# def create_ips_in_db(time_treshold=1552989909721, ip_flow_filename='data/data_ipflow.json'):
+#     ip_flow_dict = get_ips_that_communicated(ip_flow_filename)
+#     for (src_ip, dst_ip) in ip_flow_dict:
+#         if (src_ip.startswith('9.') or src_ip.startswith('10.') or src_ip.startswith('4.')) and \
+#                 (dst_ip.startswith('9.') or dst_ip.startswith('10.') or dst_ip.startswith('4.')):
+#             for (start, end, event_list) in ip_flow_dict[(src_ip, dst_ip)]:
+#                 if end <= time_treshold:
+#                     create_connections_in_database(src_ip, dst_ip, start, end)
 
 
 # '4.122.55.5', '9.66.66.12'
@@ -337,17 +337,21 @@ def create_ip_flows(ip_flow_filename='data_filtered/data_ipflow_filtered_start.j
                 # counter += 1
                 create_connections_in_database(data["sourceIPv4Address"], data["destinationIPv4Address"],
                                                data["biFlowStartMilliseconds"],
-                                               data["biFlowEndMilliseconds"])
+                                               data["biFlowEndMilliseconds"],
+                                               data["sourceTransportPort"] if "sourceTransportPort" in data else None,
+                                               data["destinationTransportPort"] if "destinationTransportPort" in data else None,
+                                               data["protocolIdentifier"] if "protocolIdentifier" in data else None)
     # return counter
 
 
-def create_connections_in_database(src_ip, dst_ip, start, end):
+def create_connections_in_database(src_ip, dst_ip, start, end, src_port, dst_port, proto):
     with(DRIVER.session()) as session:
         session.run(
             "MERGE (a:IP_ADDRESS {address: $first_ip}) "
             "MERGE (b:IP_ADDRESS {address: $second_ip}) "
-            "CREATE (a)-[:COMMUNICATES_WITH {start: $start, end: $end}]->(b)",
-            **{'first_ip': src_ip, 'second_ip': dst_ip, 'start': start, 'end': end})
+            "CREATE (a)-[:COMMUNICATES_WITH {start: $start, end: $end, src_port: $src_port, dst_port: $dst_port, proto: $proto}]->(b)",
+            **{'first_ip': src_ip, 'second_ip': dst_ip, 'start': start, 'end': end, 'src_port': src_port,
+               'dst_port': dst_port, 'proto': proto})
     print("created")
 
 
@@ -1161,3 +1165,8 @@ adamic_adar_results = {
 # 53 - DNS servery,
 # 80 - fakultny multifunkcny server
 # 123 - pyrrha NTP server
+
+# PageRank a komunikácia vedúca na určitý destination port
+# špecifikovaná IP adresa a k nej link prediction cez všetku zachytenú komunikáciu a v nej IP adresy z našej siete - tam by bolo výpočtovo
+# náročné rozlišovať všetky porty, nemá význam uvažovať adresy mimo siete, tam aj tak komunikáciu nemáme
+# zvysok je v proposed_method.py
