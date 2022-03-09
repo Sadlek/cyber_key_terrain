@@ -53,9 +53,10 @@ NAMES = {
          '4.122.55.6': 'desktop',
          '4.122.55.7': 'app server',
          # test{1-6}  # 4.122.55.21-26
-         '4.122.55.250': 'monitoring',  # 'nagios',
+         '4.122.55.250': 'monitoring'# 'nagios',
+}
 
-         # Blue Team 2
+BT2_NAMES = { # Blue Team 2
          '9.66.22.12': 'mail server',
          '9.66.22.13': 'DNS server',
          '9.66.22.14': 'web server',
@@ -76,9 +77,10 @@ NAMES = {
          '10.2.4.42': 'desktop',
          '10.2.4.43': 'desktop',
          '10.2.4.44': 'desktop',
-         '10.2.4.45': 'desktop',
+         '10.2.4.45': 'desktop'
+}
 
-         # Blue Team 3
+BT3_NAMES = {# Blue Team 3
          '9.66.33.12': 'mail server',
          '9.66.33.13': 'DNS server',
          '9.66.33.14': 'web server',
@@ -99,9 +101,10 @@ NAMES = {
          '10.3.4.42': 'desktop',
          '10.3.4.43': 'desktop',
          '10.3.4.44': 'desktop',
-         '10.3.4.45': 'desktop',
+         '10.3.4.45': 'desktop'
+}
 
-         # Blue Team 4
+BT4_NAMES = {# Blue Team 4
          '9.66.44.12': 'mail server',
          '9.66.44.13': 'DNS server',
          '9.66.44.14': 'web server',
@@ -122,9 +125,10 @@ NAMES = {
          '10.4.4.42': 'desktop',
          '10.4.4.43': 'desktop',
          '10.4.4.44': 'desktop',
-         '10.4.4.45': 'desktop',
+         '10.4.4.45': 'desktop'
+}
 
-         # Blue Team 5
+BT5_NAMES = {# Blue Team 5
          '9.66.55.12': 'mail server',
          '9.66.55.13': 'DNS server',
          '9.66.55.14': 'web server',
@@ -145,9 +149,10 @@ NAMES = {
          '10.5.4.42': 'desktop',
          '10.5.4.43': 'desktop',
          '10.5.4.44': 'desktop',
-         '10.5.4.45': 'desktop',
+         '10.5.4.45': 'desktop'
+}
 
-         # Blue Team 6
+BT6_NAMES = {# Blue Team 6
          '9.66.66.12': 'mail server',
          '9.66.66.13': 'DNS server',
          '9.66.66.14': 'web server',
