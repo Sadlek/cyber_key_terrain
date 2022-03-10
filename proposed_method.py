@@ -68,12 +68,12 @@ def determine_dependencies():
             #                      "RETURN DISTINCT id(ip1) AS source, id(ip2) AS target, r.dst_port AS dst_port'}) "
             #                      "YIELD nodeId, score RETURN gds.util.asNode(nodeId).address AS address, score "
             #                      "ORDER BY score DESC")
-            result = session.run("CALL gds.pageRank.stream({nodeQuery: 'MATCH (n) RETURN id(n) AS id', "
-                                 "relationshipQuery: 'MATCH (ip1:IP_ADDRESS)-[r:COMMUNICATES_WITH]->(ip2:IP_ADDRESS) "
-                                 f"WHERE r.dst_port = \"{destination_port}\" "
-                                 "RETURN DISTINCT id(ip1) AS source, id(ip2) AS target, r.dst_port AS dst_port'}) "
-                                 "YIELD nodeId, score RETURN gds.util.asNode(nodeId).address AS address, score "
-                                 "ORDER BY score DESC")
+            # result = session.run("CALL gds.pageRank.stream({nodeQuery: 'MATCH (n) RETURN id(n) AS id', "
+            #                      "relationshipQuery: 'MATCH (ip1:IP_ADDRESS)-[r:COMMUNICATES_WITH]->(ip2:IP_ADDRESS) "
+            #                      f"WHERE r.dst_port = \"{destination_port}\" "
+            #                      "RETURN DISTINCT id(ip1) AS source, id(ip2) AS target, r.dst_port AS dst_port'}) "
+            #                      "YIELD nodeId, score RETURN gds.util.asNode(nodeId).address AS address, score "
+            #                      "ORDER BY score DESC")
             # result = session.run("CALL gds.pageRank.stream({nodeQuery: 'MATCH (n) RETURN id(n) AS id', "
             #                      "relationshipQuery: 'MATCH (ip1:IP_ADDRESS)-[r:COMMUNICATES_WITH]->(ip2:IP_ADDRESS) "
             #                      f"WHERE r.dst_port = {destination_port} "
@@ -104,6 +104,14 @@ def determine_dependencies():
             #                      "RETURN DISTINCT id(ip1) AS source, id(ip2) AS target, r.dst_port AS dst_port'}) "
             #                      "YIELD nodeId, score RETURN gds.util.asNode(nodeId).address AS address, score "
             #                      "ORDER BY score DESC")
+            result = session.run("CALL gds.pageRank.stream({nodeQuery: 'MATCH (n) RETURN id(n) AS id', "
+                                 "relationshipQuery: 'MATCH (ip1:IP_ADDRESS)-[r:COMMUNICATES_WITH]->(ip2:IP_ADDRESS) "
+                                 "WHERE (ip1.address IN [\"9.66.22.12\", \"9.66.22.13\", \"9.66.22.14\", \"10.2.2.22\", \"10.2.2.23\", \"10.2.2.24\", \"10.2.2.25\", \"10.2.2.26\", \"10.2.2.28\", \"10.2.2.27\", \"10.2.2.29\", \"10.2.3.32\", \"10.2.3.33\", \"10.2.4.46\", \"10.2.4.47\", \"10.2.4.48\", \"10.2.4.49\", \"10.2.4.42\", \"10.2.4.43\", \"10.2.4.44\", \"10.2.4.45\"] "
+                                 "OR ip2.address IN [\"9.66.22.12\", \"9.66.22.13\", \"9.66.22.14\", \"10.2.2.22\", \"10.2.2.23\", \"10.2.2.24\", \"10.2.2.25\", \"10.2.2.26\", \"10.2.2.28\", \"10.2.2.27\", \"10.2.2.29\", \"10.2.3.32\", \"10.2.3.33\", \"10.2.4.46\", \"10.2.4.47\", \"10.2.4.48\", \"10.2.4.49\", \"10.2.4.42\", \"10.2.4.43\", \"10.2.4.44\", \"10.2.4.45\"]) "
+                                 f"AND r.dst_port = {destination_port} "
+                                 "RETURN DISTINCT id(ip1) AS source, id(ip2) AS target, r.dst_port AS dst_port'}) "
+                                 "YIELD nodeId, score RETURN gds.util.asNode(nodeId).address AS address, score "
+                                 "ORDER BY score DESC")
             # ['4.122.55.111', '4.122.55.112', '4.122.55.113', '4.122.55.114', '4.122.55.115', '4.122.55.117',
             # '4.122.55.2', '4.122.55.3', '4.122.55.4', '4.122.55.5', '4.122.55.6', '4.122.55.7', '4.122.55.21',
             # '4.122.55.22', '4.122.55.23', '4.122.55.24', '4.122.55.25', '4.122.55.26', '4.122.55.250']
@@ -117,12 +125,13 @@ def determine_dependencies():
         print("results for current port")
         print(result_for_currrent_port[0:10])
         # MU results
-        filtered_results = [list_item for list_item in result_for_currrent_port
-                            if list_item['address'].startswith('147.251.')]
-        # CyberCzech
         # filtered_results = [list_item for list_item in result_for_currrent_port
+        #                     if list_item['address'].startswith('147.251.')]
+        # CyberCzech
+        filtered_results = [list_item for list_item in result_for_currrent_port
                             # if list_item['address'] in BT1_ADDRESSES]
                             # if list_item['address'] in GLOBAL_ADDRESSES]
+                            if list_item['address'] in list(BT2_NAMES.keys())]
         print("filtered results")
         print(filtered_results[0:10])
         x, y, value = find_elbow(list(range(0, len(filtered_results))),
@@ -256,3 +265,10 @@ def adamic_adar_index(first_ip, second_ip):
 # 22, 23, 465, 80, 443, 993, 995
 
 # TODO casovy problem, ze to nespocita
+
+# TODO pobavit sa s Martinom a Tomom Jirsikom
+# TODO porovnat s inymi algoritmami, kt. riesia podobny problem - napr. Top n,
+#  poradie vyzera byt poprehadzovane, niektore IP su stale na vysokych poziciach, ale su aj take IP, kt. odhodi uplne na
+#  spodnu cast listu, SSH na porte 22 - tam to znacne poprehadzovalo
+# TODO identifikovat kriticke zariadenia aj spomedzi tych, kt. komunikovali malo + najst priklad }Dan, Martin|
+# Martin PV210 IP adresa - zistit, ci je dolezita IP + blokovanie , protocol OCSP - use case - Martina sa opýtať Online Certificate Status Protocol
