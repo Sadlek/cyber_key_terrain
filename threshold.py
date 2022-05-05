@@ -4,6 +4,7 @@ from pprint import pprint
 from time import sleep
 import os
 from classifier import BT2_NAMES, BT3_NAMES, BT4_NAMES, BT5_NAMES, BT6_NAMES
+import json
 
 
 BOLT = 'bolt://localhost:7687'
@@ -203,3 +204,42 @@ def categorize_addresses(accuracy=0.8):
 # https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=7828262
 # https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.958.3955&rep=rep1&type=pdf
 # https://scholar.google.com/scholar?hl=cs&as_sdt=0%2C5&q=Identifying+Critical+Attack+Assets+in+Dependency+Attack+Graphs&btnG=
+
+# header of the file is
+# Date first seen, Date last seen, Protocol, Src IP Address, Src Port, Dst IP Address, Dst Port, TCP Flags, Packets, Bytes
+# IP:port je vrchol v DB
+# Edge má properties: Date first seen, Date last seen, Protocol, TCP Flags, Packets, Bytes
+# TCP flags sú NCEUAPRSF, vysvetlenie na https://stackoverflow.com/questions/64408090/netflow-tcp-flags-hexidecimal-characters-not-representative-of-uaprsf
+# https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9671620 obsahuje referencie na metódy, kt. používali PageRank
+# V tom článku je problém s tým, že je potreba definovať, čo je to tá criticality
+# https://link.springer.com/content/pdf/10.1007/978-3-030-37670-3_5.pdf Centrality metriky sa používajú napr. v critical infrastructure
+# https://ieeexplore.ieee.org/abstract/document/9377730 veľmi všeobecný
+
+# mozno by sa dalo este zaoberat link prediction pre bipartite network
+# https://link.springer.com/chapter/10.1007/978-3-319-46227-1_42
+# reinforcement learning
+# https://www.sci.unich.it/~francesc/teaching/network/pagerank
+# https://indico.math.cnrs.fr/event/3475/attachments/2180/2567/Palovics_GomaxSlides.pdf
+# https://memgraph.com/blog/dynamic-page-rank-on-streaming-data
+# https://ro.uow.edu.au/cgi/viewcontent.cgi?article=10500&context=infopapers
+
+def create_cyberczech_flows(ip_flow_filename='data_filtered/data_ipflow_filtered_start.json'):
+    with open(ip_flow_filename, 'r') as jsonfile:
+        for line in jsonfile.readlines():
+            data = json.loads(line)
+            with(DRIVER.session()) as session:
+                # TCP control bits https://www.iana.org/assignments/ipfix/ipfix.xhtml
+                session.run(
+                    "MERGE (a:IP_ADDRESS {address: $src_ip, port: $src_port}) "
+                    "MERGE (b:IP_ADDRESS {address: $dst_ip, port: $dst_port}) "
+                    "CREATE (a)-[:COMMUNICATES_WITH {start: $start, end: $end, length: $length, proto: $proto, flags: $flags, "
+                    "packets: $packets, bytes: $bytes}]->(b)",
+                    **{'src_ip': data["sourceIPv4Address"], 'dst_ip': data["destinationIPv4Address"],
+                       'src_port': data["sourceTransportPort"] if "sourceTransportPort" in data else -1,
+                       'dst_port': data["destinationTransportPort"] if "destinationTransportPort" in data else -1,
+                       'start': data["biFlowStartMilliseconds"], 'end': data["biFlowEndMilliseconds"],
+                       'length': data["biFlowEndMilliseconds"] - data["biFlowStartMilliseconds"],
+                       'proto': data["protocolIdentifier"], 'flags': data["tcpControlBits"] if "tcpControlBits" in data else None,
+                       'packets': data["packetDeltaCount"] if "packetDeltaCount" in data else None,
+                       'bytes': data["octetDeltaCount"] if "octetDeltaCount" in data else None})
+            print("created")
