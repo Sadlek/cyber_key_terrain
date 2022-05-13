@@ -267,3 +267,50 @@ def alpha_function(dst_port, src_port):
 # https://dl.acm.org/doi/pdf/10.1145/1150402.1150409
 # https://dl.acm.org/doi/pdf/10.1145/3269206.3271698
 # Mozno by sa na to dal pouzil lokalny pristup
+
+# ------------------------------------------------------------------------------------------------------------------
+# Datum: 13.5.2022
+
+# Skusim pouzitie Minimalizacie konfliktov s nahodnou prechadzkou ako heuristiku na prehladavanie stavovoveho priestoru
+# kolko hran, tolko roznych alpha
+# (src_port, dst_port) budu features, kt. sa budu brat do uvahy
+# Evaluace E: hodnota objektivní funkce (poˇcet nesplnˇených podmínek=poˇcet konflikt ̊u)
+# E bude pocet nespravne kategorizovanych vrcholov, nad θ
+# pravdˇepodobnost náhodného kroku je p, pravdˇepodobnost použití smˇerové heuristiky je 1 − p, 0.02 ≤ p ≤ 0.1
+# vyber <V, a> s najlepsou evaluaciou sa riadi na zaklade kriteria, ze skusim pozmenit hodnotu a tak, aby sa
+# konfliktna premenna je ta hrana, kt. vedie do nespravne kategorizovaneho vrcholu
+
+# procedure MCRW(MaxZmen,p)
+# θ := náhodné ohodnocení typov hran podla (src_port, dst_port)
+# PocetZmen := 0
+# while E(θ) > 0 ∧ PocetZmen<MaxZmen do
+#   vyber náhodnˇe konfliktní promˇennou V
+#   generuj náhodné ˇcíslo Pravdepodobnost ∈ [0, 1]
+#   if Pravdepodobnost ≥ (1 − p)
+#       vyber náhodnˇe hodnotu a pro V
+#   else vyber hodnotu a, která minimalizuje poˇcet konflikt ̊u pro V
+#   if a<>souˇcasná hodnota V then
+#       pˇriˇrad’ a do V
+#       PocetZmen := PocetZmen+1
+# return θ
+
+
+from random import random
+
+
+def mcrw(count_of_changes=100000, jumping_probability=0.05):
+    theta = random_evaluation_of_edges()
+    changes = 0
+    while pagerank_with_theta_conflicts(theta) > 0 and changes < count_of_changes:
+        conflict_var = choose_edge_that_leads_to_misclassified_node()
+        conflict_var_new = None
+        probability = random()
+        print("Generated probability was ", probability)
+        if probability >= 1 - jumping_probability:
+            conflict_var_new = choose_random_value_for_conflict_var()
+        else:
+            conflict_var_new = choose_value_that_minimizes_conflicts_for_this_variable() # s presnostou na 0.1
+        if conflict_var_new != conflict_var:
+            conflict_var = conflict_var_new
+            changes += 1
+    return theta
