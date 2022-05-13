@@ -211,6 +211,7 @@ def alpha_function(dst_port, src_port):
 # s(v_1) = s(v_0) + s(u_1) * alpha(u, v, t_1) = s(v_0) + (s(u_0) + 1 - alpha(u, v, t_1)) * alpha(u, v, t_1) =
 #        = s(v_0) + (s(u_0) + 1) * alpha(u, v, t_1) - alpha^2(u, v, t_1)
 # s(u_1) = 0
+# r(v_1) = s(v_1)
 
 # druha hrana (u, w, t_2)
 # r(u_2) = r(u_1) + (1 - alpha(u, w, t_2)) = r(u_0) + (1 - alpha(u, v, t_1)) + (1 - alpha(u, w, t_2))
@@ -230,7 +231,21 @@ def alpha_function(dst_port, src_port):
 #        = s(v_0) + [s(u_0) + 1] * [alpha(u, v, t_1) + alpha(u, v, t_3)] - [alpha^2(u, v, t_1) + alpha^2(u, v, t_3)]
 # s(u_3) = 0
 
-# TODO vyzera to tak, ze sa da odhadnut s na zaklade r
+# stvrta hrana (w, v , t_4)
+# r(w_4) = r(w_3) + (1 - alpha(w, v , t_4)) =
+#        = r(w_0) + (s(u_0) + 1) * alpha(u, w, t_2) - alpha^2(u, w, t_2) + (1 - alpha(w, v , t_4))
+# s(w_4) = s(w_3) + (1 - alpha(w, v , t_4)) =
+#        = s(w_0) + (s(u_0) + 1) * alpha(u, w, t_2) - alpha^2(u, w, t_2) + (1 - alpha(w, v , t_4))
+# r(v_4) = r(v_3) + s(w_4) * alpha(w, v , t_4) =
+#        = r(v_0) + [s(u_0) + 1] * [alpha(u, v, t_1) + alpha(u, v, t_3)] - [alpha^2(u, v, t_1) + alpha^2(u, v, t_3)] +
+#           + [s(w_0) + (s(u_0) + 1) * alpha(u, w, t_2) - alpha^2(u, w, t_2) + (1 - alpha(w, v , t_4))] * alpha(w, v , t_4) =
+#        = [alpha(u, v, t_1) + alpha(u, v, t_3)] - [alpha^2(u, v, t_1) + alpha^2(u, v, t_3)] + alpha(u, w, t_2) * alpha(w, v , t_4) -
+#           - alpha^2(u, w, t_2) * alpha(w, v , t_4) + alpha(w, v , t_4) - alpha^2(w, v , t_4) =
+#        = [alpha(u, v, t_1) + alpha(u, v, t_3) + alpha(w, v , t_4)] - [alpha^2(u, v, t_1) + alpha^2(u, v, t_3) + alpha^2(w, v , t_4)]
+#           + alpha(u, w, t_2) * alpha(w, v , t_4) - alpha^2(u, w, t_2) * alpha(w, v , t_4)
+# s(v_4) =
+# s(w_4) = 0
+# takto sa to vyriesit neda, ze budem spatne dopocitavat alpha
 
 # r (u) = r (u) + (1 − α);
 # s(u) = s(u) + (1 − α);
@@ -241,3 +256,14 @@ def alpha_function(dst_port, src_port):
 # 9 else if β = 1 then
 # 10 s(v) = s(v) + s(u)α;
 # 11 s(u) = 0;
+
+# Dalo by sa to naucit lokalne vezmem si vrchol a jeho okolie v case
+# https://slidetodoc.com/learning-to-rank-typed-graph-walks-local-and/
+
+# Backup 13.5. clankov,
+# https://www.cs.cmu.edu/~einat/webkdd-2007.pdf
+# https://dl.acm.org/doi/pdf/10.1145/1060745.1060828
+# https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.104.3328&rep=rep1&type=pdf
+# https://dl.acm.org/doi/pdf/10.1145/1150402.1150409
+# https://dl.acm.org/doi/pdf/10.1145/3269206.3271698
+# Mozno by sa na to dal pouzil lokalny pristup
